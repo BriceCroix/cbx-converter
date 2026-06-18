@@ -1,6 +1,7 @@
 import argparse
 import os
 from pathlib import Path
+from tqdm import tqdm
 
 from .converter import cbz_convert
 from .file_pattern_parser import compute_output_path
@@ -61,10 +62,10 @@ Examples :
     else:
         files = sorted(list(Path(args.cbz).rglob("*.[cC][bB][zZ]")))
 
-    for i_file in files:
+    for i_file in (pbar:=tqdm(files)):
+        pbar.set_postfix_str(i_file)
         o_file = compute_output_path(i_file, args.output)
-        print(f"Creating {o_file}... ", end="", flush=True)
-        if cbz_convert(
+        if not cbz_convert(
             i_file,
             o_file,
             image_format=args.format,
@@ -72,6 +73,4 @@ Examples :
             width=args.width,
             height=args.height,
         ):
-            print("Done !")
-        else:
-            print("ERROR !")
+            print(f"ERROR on converting {i_file} to {o_file}")
