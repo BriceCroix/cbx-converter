@@ -2,7 +2,7 @@ import argparse
 import os
 from pathlib import Path
 
-from .converter import cbz2pdf
+from .converter import cbz_convert
 from .file_pattern_parser import compute_output_path
 
 
@@ -18,7 +18,7 @@ def main():
         "-o",
         "--output",
         default="%F.pdf",
-        help="""Output file pattern.
+        help="""Output file pattern. Extension must be provided.
 
 Supported matchers are :
 - `%%f` : The file stem (`/tmp/dir/myfile.cbz` -> `myfile`)
@@ -26,7 +26,11 @@ Supported matchers are :
 - `%%e` : The file extension (`/tmp/dir/myfile.cbz` -> `cbz`)
 - `%%p` : The file parent only (`/tmp/dir/myfile.cbz` -> `dir`)
 - `%%P` : The file parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp/dir`)
-- `%%Q` : The file parent's parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp`)""",
+- `%%Q` : The file parent's parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp`)
+
+Examples :
+- `%%F.pdf`
+- `%%Q/%%p-converted/%%f.cbz`""",
     )
 
     parser.add_argument(
@@ -60,7 +64,7 @@ Supported matchers are :
     for i_file in files:
         o_file = compute_output_path(i_file, args.output)
         print(f"Creating {o_file}... ", end="", flush=True)
-        if cbz2pdf(
+        if cbz_convert(
             i_file,
             o_file,
             image_format=args.format,

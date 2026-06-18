@@ -6,7 +6,7 @@ import img2pdf
 import PIL
 
 
-def cbz2pdf(
+def cbz_convert(
     input: str,
     output: str,
     image_format: str | None = None,
@@ -41,7 +41,6 @@ def cbz2pdf(
     with (
         zipfile.ZipFile(input, "r") as zf,
         tempfile.TemporaryDirectory() as tempdir,
-        open(output, "wb") as out,
     ):
         try:
             zf.extractall(path=tempdir)
@@ -84,7 +83,7 @@ def cbz2pdf(
                         image_file_ext_in = ".jpg"
 
                     if image_file_ext_out != image_file_ext_in:
-                        image_filename_out = image_filename_in + image_file_ext_out
+                        image_filename_out = os.path.splitext(image_filename_in)[0] + image_file_ext_out
                     else:
                         image_filename_out = image_filename_in
                     
@@ -97,8 +96,17 @@ def cbz2pdf(
             else:
                 images_filenames_out = images_filenames_in
 
-            out.write(img2pdf.convert(images_filenames_out))
+            output_ext = os.path.splitext(output)[1].lower()
+            if output_ext == ".pdf":
+                with open(output, "wb") as out:
+                    out.write(img2pdf.convert(images_filenames_out))
+            elif output_ext == ".cbz":
+                with zipfile.ZipFile(output, "w") as out:
+                    for image_filename_out in images_filenames_out:
+                        out.write(image_filename_out, os.path.basename(image_filename_out))
+            else:
+                raise f"Unsupported format : {output_ext}"
             return True
         except Exception as e:
-            print(f"Error converting pdf : {e}")
+            print(f"Error converting file {input} : {e}")
             return False
