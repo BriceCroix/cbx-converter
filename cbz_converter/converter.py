@@ -5,6 +5,8 @@ import zipfile
 import img2pdf
 import PIL
 
+from tqdm import tqdm
+
 
 def cbz_convert(
     input: str,
@@ -55,7 +57,7 @@ def cbz_convert(
                 or height is not None
                 or image_format is not None
             ):
-                for image_filename_in in images_filenames_in:
+                for image_filename_in in tqdm(images_filenames_in, desc="Processing", leave=False):
                     image = PIL.Image.open(image_filename_in)
 
                     if width is not None or height is not None:
@@ -102,7 +104,7 @@ def cbz_convert(
                     out.write(img2pdf.convert(images_filenames_out))
             elif output_ext == ".cbz":
                 with zipfile.ZipFile(output, "w") as out:
-                    for image_filename_out in images_filenames_out:
+                    for image_filename_out in tqdm(images_filenames_out, desc="Writing", leave=False):
                         out.write(image_filename_out, os.path.basename(image_filename_out))
             else:
                 raise f"Unsupported format : {output_ext}"
