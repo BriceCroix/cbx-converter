@@ -28,6 +28,15 @@ Supported matchers are :
 - `%%P` : The file parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp/dir`)
 - `%%Q` : The file parent's parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp`)""",
     )
+
+    parser.add_argument(
+        "-f",
+        "--format",
+        help="Image format to be forced on each image (jpg, png...). Can be useful when creating cbz"
+        " but target device does not support all image types (e.g webp).",
+        type=str,
+    )
+
     parser.add_argument(
         "-q",
         "--quality",
@@ -54,6 +63,7 @@ Supported matchers are :
         if cbz2pdf(
             i_file,
             o_file,
+            image_format=args.format,
             quality=args.quality,
             width=args.width,
             height=args.height,
