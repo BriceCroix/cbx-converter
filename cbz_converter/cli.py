@@ -46,14 +46,11 @@ Examples :
         "-q",
         "--quality",
         help="Integer between 0 (lowest) and 100 (highest) to downgrade the quality "
-        "of images.",
+        "of images (jpg default is 75).",
         type=int,
     )
     parser.add_argument(
-        "-W", "--width", help="Maximum width of output in pixels.", type=int
-    )
-    parser.add_argument(
-        "-H", "--height", help="Maximum height of output in pixels.", type=int
+        "-s", "--size", help="Maximum width and height of images.", type=int
     )
     args = parser.parse_args()
 
@@ -62,7 +59,7 @@ Examples :
     else:
         files = sorted(list(Path(args.cbz).rglob("*.[cC][bB][zZ]")))
 
-    for i_file in (pbar:=tqdm(files)):
+    for i_file in (pbar := tqdm(files)):
         pbar.set_postfix_str(i_file)
         o_file = compute_output_path(i_file, args.output)
         if not cbz_convert(
@@ -70,7 +67,6 @@ Examples :
             o_file,
             image_format=args.format,
             quality=args.quality,
-            width=args.width,
-            height=args.height,
+            max_size=args.size,
         ):
             print(f"ERROR on converting {i_file} to {o_file}")

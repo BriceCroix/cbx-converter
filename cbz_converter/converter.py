@@ -13,8 +13,7 @@ def cbz_convert(
     output: str,
     image_format: str | None = None,
     quality: int | None = None,
-    width: int | None = None,
-    height: int | None = None,
+    max_size: int | None = None,
 ) -> bool:
     """Converts a cbz file into another file.
 
@@ -29,10 +28,8 @@ def cbz_convert(
     quality : int | None (optional)
         If provided, allows to lower the quality of the images (0 is worst, 100 is best).
         Only supported for file types : avif, jpg, webp.
-    width : int | None (optional)
-        If provided, images will be resized to this maximum width.
-    height : int | None (optional)
-        If provided, images will be resized to this maximum height.
+    max_size : int | None (optional)
+        If provided, images will be resized with this value as their width or height.
 
     Returns
     -------
@@ -53,8 +50,7 @@ def cbz_convert(
             images_filenames_out = []
             if (
                 quality is not None
-                or width is not None
-                or height is not None
+                or max_size is not None
                 or image_format is not None
             ):
                 for image_filename_in in tqdm(
@@ -62,18 +58,14 @@ def cbz_convert(
                 ):
                     image = PIL.Image.open(image_filename_in)
 
-                    if width is not None or height is not None:
-                        # Some images are rotated, work with that
-                        image_width = min(image.size)
-                        image_heigth = max(image.size)
-                        ratio = min(
-                            (width or image_width) / image_width,
-                            (height or image_heigth) / image_heigth,
-                        )
-                        image = image.resize(
-                            size=(int(image.width * ratio), int(image.height * ratio)),
-                            resample=PIL.Image.Resampling.LANCZOS,
-                        )
+                    if max_size is not None:
+                        size = max(image.size)
+                        if (size > max_size):
+                            ratio = max_size / size
+                            image = image.resize(
+                                size=(int(image.width * ratio), int(image.height * ratio)),
+                                resample=PIL.Image.Resampling.LANCZOS,
+                            )
 
                     image_file_ext_in = os.path.splitext(image_filename_in)[1]
                     image_file_ext_out = image_format or image_file_ext_in
