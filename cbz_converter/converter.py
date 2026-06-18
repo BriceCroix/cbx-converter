@@ -57,7 +57,9 @@ def cbz_convert(
                 or height is not None
                 or image_format is not None
             ):
-                for image_filename_in in tqdm(images_filenames_in, desc="Processing", leave=False):
+                for image_filename_in in tqdm(
+                    images_filenames_in, desc="Processing", leave=False
+                ):
                     image = PIL.Image.open(image_filename_in)
 
                     if width is not None or height is not None:
@@ -77,15 +79,17 @@ def cbz_convert(
                     image_file_ext_out = image_format or image_file_ext_in
                     image_file_ext_out = image_file_ext_out.lower()
 
-                    if image_file_ext_out[0] != '.':
-                        image_file_ext_out = '.' + image_file_ext_out
+                    if image_file_ext_out[0] != ".":
+                        image_file_ext_out = "." + image_file_ext_out
                     if image_file_ext_out == ".jpeg":
                         image_file_ext_out = ".jpg"
                     if image_file_ext_in == ".jpeg":
                         image_file_ext_in = ".jpg"
 
                     if image_file_ext_out != image_file_ext_in:
-                        image_filename_out = os.path.splitext(image_filename_in)[0] + image_file_ext_out
+                        image_filename_out = (
+                            os.path.splitext(image_filename_in)[0] + image_file_ext_out
+                        )
                     else:
                         image_filename_out = image_filename_in
 
@@ -93,10 +97,8 @@ def cbz_convert(
                         image = image.convert("RGB")
 
                     # Only use quality argument if provided.
-                    quality_dict = {'quality':quality} if quality is not None else {}
-                    image.save(
-                        image_filename_out, optimize=True, **quality_dict
-                    )
+                    quality_dict = {"quality": quality} if quality is not None else {}
+                    image.save(image_filename_out, optimize=True, **quality_dict)
                     images_filenames_out.append(image_filename_out)
             else:
                 images_filenames_out = images_filenames_in
@@ -107,8 +109,12 @@ def cbz_convert(
                     out.write(img2pdf.convert(images_filenames_out))
             elif output_ext == ".cbz":
                 with zipfile.ZipFile(output, "w") as out:
-                    for image_filename_out in tqdm(images_filenames_out, desc="Writing", leave=False):
-                        out.write(image_filename_out, os.path.basename(image_filename_out))
+                    for image_filename_out in tqdm(
+                        images_filenames_out, desc="Writing", leave=False
+                    ):
+                        out.write(
+                            image_filename_out, os.path.basename(image_filename_out)
+                        )
             else:
                 raise f"Unsupported format : {output_ext}"
             return True
