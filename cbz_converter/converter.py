@@ -88,7 +88,10 @@ def cbz_convert(
                         image_filename_out = os.path.splitext(image_filename_in)[0] + image_file_ext_out
                     else:
                         image_filename_out = image_filename_in
-                    
+
+                    if image_file_ext_out == ".jpg":
+                        image = image.convert("RGB")
+
                     # Only use quality argument if provided.
                     quality_dict = {'quality':quality} if quality is not None else {}
                     image.save(
