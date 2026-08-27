@@ -16,3 +16,15 @@ wheels/
 # IDEs
 .vscode
 .idea
+
+# Misc
+*.cbz
+*.zip
+*.cbr
+*.rar
+*.cba
+*.ace
+*.cbt
+*.tar
+*.cb7
+*.7z
