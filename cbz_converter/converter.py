@@ -7,13 +7,15 @@ from pathlib import Path
 import img2pdf
 import PIL
 import puremagic
+import py7zr
 import rarfile
 from natsort import natsorted
 from tqdm import tqdm
 
 
-def safe_img_extension(ext: str) -> str:
-    """Converts an image extension to its canonical equivalent.
+def safe_extension(ext: str) -> str:
+    """Converts an extension to its canonical equivalent, groups similar
+    extensions together, and removes leading dot if any.
 
     Parameters
     ----------
@@ -28,18 +30,24 @@ def safe_img_extension(ext: str) -> str:
     Example
     -------
 
-    >>> safe_img_extension("JPEG")
+    >>> safe_extension(".JPEG")
     'jpg'
-    >>> safe_img_extension("jpe")
+    >>> safe_extension("jpe")
     'jpg'
-    >>> safe_img_extension("png")
+    >>> safe_extension("png")
     'png'
+    >>> safe_extension(".zip")
+    'zip'
     """
-    match ext.lower().strip():
+    ext = ext.lower().strip()
+    if ext[0] == ".":
+        ext = ext[1:]
+
+    match ext:
         case "jpg" | "jpeg" | "jpe" | "jif" | "jfif" | "jfi":
             return "jpg"
         case _:
-            return ext.lower().strip()
+            return ext
 
 
 def cbz_convert(
@@ -74,22 +82,30 @@ def cbz_convert(
     os.makedirs(os.path.dirname(output), exist_ok=True)
 
     if image_formats is not None:
-        image_formats = list({safe_img_extension(f) for f in image_formats})
+        image_formats = list({safe_extension(f) for f in image_formats})
 
     with (
         tempfile.TemporaryDirectory() as input_tempdir,
         tempfile.TemporaryDirectory() as output_tempdir,
     ):
         try:
-            magic_extension = puremagic.magic_file(input)[0].extension
+            magic_extension = safe_extension(puremagic.magic_file(input)[0].extension)
 
             match magic_extension:
-                case ".cbz" | ".zip":
+                case "cbz" | "zip":
                     with zipfile.ZipFile(input, "r") as zf:
                         zf.extractall(path=input_tempdir)
-                case ".cbr" | ".rar":
+                case "cbr" | "rar":
                     with rarfile.RarFile(input, "r") as rf:
                         rf.extractall(path=input_tempdir)
+                case "cb7" | "7z":
+                    with py7zr.SevenZipFile(input, "r") as sf:
+                        sf.extractall(path=input_tempdir)
+                case "cba" | "ace" | "cbt" | "tar":
+                    print(
+                        f"Error converting file {input} : Format {magic_extension} not yet supported"
+                    )
+                    return False
                 case _:
                     print(f"Error converting file {input} : Not a simple archive")
                     return False
@@ -124,26 +140,22 @@ def cbz_convert(
                                 resample=PIL.Image.Resampling.LANCZOS,
                             )
 
-                    image_file_ext_in = safe_img_extension(
+                    image_file_ext_in = safe_extension(
                         os.path.splitext(image_filename_in)[1]
                     )
-                    image_file_ext_out = (
+                    image_file_ext_out = safe_extension(
                         image_file_ext_in
                         if image_formats is None or image_file_ext_in in image_formats
                         else image_formats[0]
                     )
 
-                    if image_file_ext_out[0] != ".":
-                        image_file_ext_out = "." + image_file_ext_out
+                    image_filename_out = (
+                        os.path.splitext(image_filename_in)[0]
+                        + "."
+                        + image_file_ext_out
+                    )
 
-                    if image_file_ext_out != image_file_ext_in:
-                        image_filename_out = (
-                            os.path.splitext(image_filename_in)[0] + image_file_ext_out
-                        )
-                    else:
-                        image_filename_out = image_filename_in
-
-                    if image_file_ext_out == ".jpg":
+                    if image_file_ext_out == "jpg":
                         image = image.convert("RGB")
 
                     # Only use quality argument if provided.
@@ -165,25 +177,50 @@ def cbz_convert(
                 shutil.copytree(input_tempdir, output_tempdir, dirs_exist_ok=True)
                 images_filenames_out = images_filenames_in
 
-            output_ext = os.path.splitext(output)[1].lower()
-            if output_ext == ".pdf":
-                images_filenames_out_absolute = [
-                    os.path.join(output_tempdir, image_filename_out)
-                    for image_filename_out in images_filenames_out
-                ]
-                with open(output, "wb") as out:
-                    out.write(img2pdf.convert(images_filenames_out_absolute))
-            elif output_ext == ".cbz":
-                with zipfile.ZipFile(output, "w") as out:
-                    for image_filename_out in tqdm(
-                        images_filenames_out, desc="Writing", leave=False
-                    ):
-                        out.write(
-                            os.path.join(output_tempdir, image_filename_out),
-                            image_filename_out,
+            output_ext = safe_extension(os.path.splitext(output)[1])
+            match output_ext:
+                case "pdf":
+                    images_filenames_out_absolute = [
+                        os.path.join(output_tempdir, image_filename_out)
+                        for image_filename_out in images_filenames_out
+                    ]
+                    with open(output, "wb") as out:
+                        out.write(img2pdf.convert(images_filenames_out_absolute))
+                case "cbz" | "zip":
+                    with zipfile.ZipFile(output, "w") as out:
+                        for image_filename_out in tqdm(
+                            images_filenames_out, desc="Writing", leave=False
+                        ):
+                            out.write(
+                                os.path.join(output_tempdir, image_filename_out),
+                                image_filename_out,
+                            )
+                case "cbr" | "rar":
+                    if False:
+                        with rarfile.RarFile(output, "w") as out:
+                            for image_filename_out in tqdm(
+                                images_filenames_out, desc="Writing", leave=False
+                            ):
+                                out.write(
+                                    os.path.join(output_tempdir, image_filename_out),
+                                    image_filename_out,
+                                )
+                    else:
+                        # rarfile would throw an exception anyway.
+                        raise RuntimeError(
+                            "rar/cbr files can only be read but not written"
                         )
-            else:
-                raise f"Unsupported format : {output_ext}"
+                case "cb7" | "7z":
+                    with py7zr.SevenZipFile(output, "w") as out:
+                        for image_filename_out in tqdm(
+                            images_filenames_out, desc="Writing", leave=False
+                        ):
+                            out.write(
+                                os.path.join(output_tempdir, image_filename_out),
+                                image_filename_out,
+                            )
+                case _:
+                    raise f"Unsupported format : {output_ext}"
             return True
         except Exception as e:  # noqa: BLE001
             print(f"Error converting file {input} : {e}")
