@@ -5,6 +5,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+import acefile
 import img2pdf
 import PIL
 import puremagic
@@ -106,7 +107,8 @@ def cbz_convert(
                     with tarfile.TarFile(input, "r") as tf:
                         tf.extractall(path=input_tempdir)
                 case "cba" | "ace":
-                    raise f"Error converting file {input} : Format {magic_extension} not yet supported"
+                    with acefile.open(input, "r") as af:
+                        af.extractall(path=input_tempdir)
                 case _:
                     print(f"Error converting file {input} : Not a simple archive")
                     return False
@@ -196,21 +198,11 @@ def cbz_convert(
                                 os.path.join(output_tempdir, image_filename_out),
                                 image_filename_out,
                             )
-                case "cbr" | "rar":
-                    if False:
-                        with rarfile.RarFile(output, "w") as out:
-                            for image_filename_out in tqdm(
-                                images_filenames_out, desc="Writing", leave=False
-                            ):
-                                out.write(
-                                    os.path.join(output_tempdir, image_filename_out),
-                                    image_filename_out,
-                                )
-                    else:
-                        # rarfile would throw an exception anyway.
-                        raise RuntimeError(
-                            "rar/cbr files can only be read but not written"
-                        )
+                case "cbr" | "rar" | "cba" | "ace":
+                    # rarfile and acefile would throw an exception anyway.
+                    raise RuntimeError(
+                        f"{output_ext} files can only be read but not written"
+                    )
                 case "cb7" | "7z":
                     with py7zr.SevenZipFile(output, "w") as out:
                         for image_filename_out in tqdm(
