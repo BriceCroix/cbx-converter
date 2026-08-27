@@ -55,9 +55,3 @@ def compute_output_path(input_path: str, output_path_pattern: str = "%F.pdf") ->
 
     # Perform the substitution using a lookup lambda function
     return pattern.sub(lambda match: replacements[match.group(0)], output_path_pattern)
-
-
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()

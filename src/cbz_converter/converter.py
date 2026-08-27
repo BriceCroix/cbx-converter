@@ -237,9 +237,3 @@ def cbz_convert(
         except Exception as e:  # noqa: BLE001
             print(f"Error converting file {input} : {e}")
             return False
-
-
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod(verbose=True)

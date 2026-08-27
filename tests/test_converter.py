@@ -106,3 +106,31 @@ def test_convert_cbr_to_cbz_with_gif(tmp_path):
     images_paths = [img for img in Path(extract_dir).rglob("*") if img.is_file()]
     for image_path in images_paths:
         assert puremagic.magic_file(image_path)[0].extension == ".gif"
+
+def test_convert_cbz_to_cb7_do_all(tmp_path):
+    asset = get_asset("bobby_make_believe_sample_dir.cbz")
+    out = os.path.join(tmp_path, "out.cb7")
+    assert cbz_convert(
+        asset,
+        out,
+        image_formats=["png", "webp"],
+        quality=10,
+        max_size=200,
+    )
+    assert puremagic.magic_file(out)[0].extension == ".cb7"
+
+
+def test_convert_bad_to_cbz(tmp_path):
+    out = os.path.join(tmp_path, "out.cbz")
+    assert not cbz_convert(
+        get_asset("README.md"),
+        out,
+    )
+
+
+def test_convert_cbz_to_bad(tmp_path):
+    out = os.path.join(tmp_path, "absolutely.not")
+    assert not cbz_convert(
+        get_asset("bobby_make_believe_sample_dir.cbz"),
+        out,
+    )
