@@ -18,6 +18,7 @@ dependencies = [
 dev = [
     "coverage>=7.15.4",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
 ]
 
 [project.scripts]
@@ -32,5 +33,13 @@ pythonpath = "src"
 addopts = [
     "--import-mode=importlib",
     "--doctest-modules",
-    "--verbose"
+    "--verbose",
+    "--cov",
 ]
+
+[tool.coverage.run]
+source = ["src/cbz_converter"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
