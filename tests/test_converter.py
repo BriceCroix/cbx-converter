@@ -77,6 +77,26 @@ def test_convert_cbz_downscale(tmp_path):
         assert max(width, height) == max_size
 
 
+def test_convert_cbz_downscale_very_large(tmp_path):
+    max_size = 1000000
+    out = os.path.join(tmp_path, "out.cbz")
+    assert cbz_convert(
+        get_asset("bobby_make_believe_sample.cbz"),
+        out,
+        max_size=max_size,
+    )
+    assert puremagic.magic_file(out)[0].extension == ".cbz"
+    extract_dir = os.path.join(tmp_path, "extracted")
+    os.makedirs(extract_dir)
+    with zipfile.ZipFile(out, "r") as zf:
+        zf.extractall(path=extract_dir)
+    images_paths = [img for img in Path(extract_dir).rglob("*") if img.is_file()]
+    for image_path in images_paths:
+        img = PIL.Image.open(image_path)
+        width, height = img.size
+        assert max(width, height) < max_size
+
+
 def test_convert_cbt_downgrade(tmp_path):
     asset = get_asset("bobby_make_believe_sample_dir.cbt")
     out = os.path.join(tmp_path, "out.cbt")
@@ -106,6 +126,7 @@ def test_convert_cbr_to_cbz_with_gif(tmp_path):
     images_paths = [img for img in Path(extract_dir).rglob("*") if img.is_file()]
     for image_path in images_paths:
         assert puremagic.magic_file(image_path)[0].extension == ".gif"
+
 
 def test_convert_cbz_to_cb7_do_all(tmp_path):
     asset = get_asset("bobby_make_believe_sample_dir.cbz")
