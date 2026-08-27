@@ -113,8 +113,9 @@ def cbz_convert(
                     with acefile.open(input, "r") as af:
                         af.extractall(path=input_tempdir)
                 case _:
-                    print(f"Error converting file {input} : Not a simple archive")
-                    return False
+                    raise RuntimeError(
+                        f'Unrecognized magic extension "{magic_extension}"'
+                    )
 
             images_filenames_in = natsorted(
                 [
