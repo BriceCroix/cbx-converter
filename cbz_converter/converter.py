@@ -6,6 +6,8 @@ from pathlib import Path
 
 import img2pdf
 import PIL
+import puremagic
+import rarfile
 from natsort import natsorted
 from tqdm import tqdm
 
@@ -56,9 +58,10 @@ def cbz_convert(
     output : str
         Path to file to be created.
     image_formats : str | None (optional)
-        If provided, the file formats to be forced for each image in the cbz archive (jpg, png...).
+        If provided, the file formats to be forced for each image in the cbz archive
+        (jpg, png...).
     quality : int | None (optional)
-        If provided, allows to lower the quality of the images (0 is worst, 100 is best).
+        If provided, allows to lower the quality of the images (0 is worst, 100 is best)
         Only supported for file types : avif, jpg, webp.
     max_size : int | None (optional)
         If provided, images will be resized with this value as their width or height.
@@ -74,12 +77,23 @@ def cbz_convert(
         image_formats = list({safe_img_extension(f) for f in image_formats})
 
     with (
-        zipfile.ZipFile(input, "r") as zf,
         tempfile.TemporaryDirectory() as input_tempdir,
         tempfile.TemporaryDirectory() as output_tempdir,
     ):
         try:
-            zf.extractall(path=input_tempdir)
+            magic_extension = puremagic.magic_file(input)[0].extension
+
+            match magic_extension:
+                case ".cbz" | ".zip":
+                    with zipfile.ZipFile(input, "r") as zf:
+                        zf.extractall(path=input_tempdir)
+                case ".cbr" | ".rar":
+                    with rarfile.RarFile(input, "r") as rf:
+                        rf.extractall(path=input_tempdir)
+                case _:
+                    print(f"Error converting file {input} : Not a simple archive")
+                    return False
+
             images_filenames_in = natsorted(
                 [
                     os.path.relpath(p, start=input_tempdir)
