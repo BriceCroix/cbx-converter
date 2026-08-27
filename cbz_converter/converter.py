@@ -1,5 +1,6 @@
 import os
 import shutil
+import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
@@ -101,11 +102,11 @@ def cbz_convert(
                 case "cb7" | "7z":
                     with py7zr.SevenZipFile(input, "r") as sf:
                         sf.extractall(path=input_tempdir)
-                case "cba" | "ace" | "cbt" | "tar":
-                    print(
-                        f"Error converting file {input} : Format {magic_extension} not yet supported"
-                    )
-                    return False
+                case "cbt" | "tar":
+                    with tarfile.TarFile(input, "r") as tf:
+                        tf.extractall(path=input_tempdir)
+                case "cba" | "ace":
+                    raise f"Error converting file {input} : Format {magic_extension} not yet supported"
                 case _:
                     print(f"Error converting file {input} : Not a simple archive")
                     return False
@@ -219,6 +220,22 @@ def cbz_convert(
                                 os.path.join(output_tempdir, image_filename_out),
                                 image_filename_out,
                             )
+                case "cbt" | "tar":
+                    with tarfile.TarFile(output, "w") as out:
+                        for image_filename_out in tqdm(
+                            images_filenames_out, desc="Writing", leave=False
+                        ):
+                            image_filename_out_absolute = os.path.join(
+                                output_tempdir, image_filename_out
+                            )
+                            with open(image_filename_out_absolute, "rb") as img:
+                                out.addfile(
+                                    out.gettarinfo(
+                                        image_filename_out_absolute,
+                                        image_filename_out,
+                                    ),
+                                    img,
+                                )
                 case _:
                     raise f"Unsupported format : {output_ext}"
             return True
