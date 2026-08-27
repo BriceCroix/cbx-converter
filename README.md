@@ -9,7 +9,7 @@ images in cbz file to other format (for instance if your reader does not support
 ## How to use
 
 ```bash
-uv run python -m cbz_converter <CBZ> [--output <OUT>]
+uv run cbz_converter <CBZ> [--output <OUT>]
 ```
 
 - `<CBZ>` can either be a `.cbz` file or a directory containing `.cbz` files.
@@ -18,5 +18,5 @@ uv run python -m cbz_converter <CBZ> [--output <OUT>]
 Use the following to learn about all options :
 
 ```bash
-uv run python -m cbz_converter --help
+uv run cbz_converter --help
 ```
