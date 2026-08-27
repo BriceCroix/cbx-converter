@@ -7,5 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
     "img2pdf>=0.6.3",
     "natsort>=8.4.0",
+    "puremagic>=2.2.0",
+    "rarfile>=4.5",
     "tqdm>=4.70.0",
 ]

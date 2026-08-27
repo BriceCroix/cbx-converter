@@ -9,6 +9,8 @@ source = { virtual = "." }
 dependencies = [
     { name = "img2pdf" },
     { name = "natsort" },
+    { name = "puremagic" },
+    { name = "rarfile" },
     { name = "tqdm" },
 ]
 
@@ -16,6 +18,8 @@ dependencies = [
 requires-dist = [
     { name = "img2pdf", specifier = ">=0.6.3" },
     { name = "natsort", specifier = ">=8.4.0" },
+    { name = "puremagic", specifier = ">=2.2.0" },
+    { name = "rarfile", specifier = ">=4.5" },
     { name = "tqdm", specifier = ">=4.70.0" },
 ]
 
@@ -167,6 +171,24 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c9/e4/4b64a97d71b2a83158134abbb2f5bd3f8a2ea691361282f010998f339ec7/pillow-12.2.0-cp314-cp314t-win32.whl", hash = "sha256:6bb77b2dcb06b20f9f4b4a8454caa581cd4dd0643a08bacf821216a16d9c8354", size = 6482084, upload-time = "2026-04-01T14:45:47.568Z" },
     { url = "https://files.pythonhosted.org/packages/ba/13/306d275efd3a3453f72114b7431c877d10b1154014c1ebbedd067770d629/pillow-12.2.0-cp314-cp314t-win_amd64.whl", hash = "sha256:6562ace0d3fb5f20ed7290f1f929cae41b25ae29528f2af1722966a0a02e2aa1", size = 7225152, upload-time = "2026-04-01T14:45:50.032Z" },
     { url = "https://files.pythonhosted.org/packages/ff/6e/cf826fae916b8658848d7b9f38d88da6396895c676e8086fc0988073aaf8/pillow-12.2.0-cp314-cp314t-win_arm64.whl", hash = "sha256:aa88ccfe4e32d362816319ed727a004423aab09c5cea43c01a4b435643fa34eb", size = 2556579, upload-time = "2026-04-01T14:45:52.529Z" },
+]
+
+[[package]]
+name = "puremagic"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/24/74/ce5987ab9b8aec4ced06e2723ebb604205c9eb58abdad91453da93166380/puremagic-2.2.0.tar.gz", hash = "sha256:eb4bddf07c177c4b434554b92165b67449f5a51e152b976202d6254498810eef", size = 1189752, upload-time = "2026-04-08T01:39:55.562Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/81/314320aeffd88dadeac553ff9eb10f54507ab41deccd0c69f6221d254a0a/puremagic-2.2.0-py3-none-any.whl", hash = "sha256:c4f7ed7307f056c787199acfda839555921be1df13abba61e8e6db0c787ae1d0", size = 71971, upload-time = "2026-04-08T01:39:54.169Z" },
+]
+
+[[package]]
+name = "rarfile"
+version = "4.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/eb/33ea5625de4e84144069ea021a282ea3c44ff7bd341b740bcadff028bea7/rarfile-4.5.tar.gz", hash = "sha256:7425d0afa180f0092db903abb1526a130b36858980aad90b3694f48e41420155", size = 155541, upload-time = "2026-08-02T20:45:53.221Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/36/ffd87452bf72310dfd1185ade33e5b8be374ab370d19573a8197ca25c95b/rarfile-4.5-py3-none-any.whl", hash = "sha256:c74341f4b9a3a3ebb35ef396d59daf059eb028f34995a7162950a41d97b84de9", size = 30035, upload-time = "2026-08-02T20:45:52.212Z" },
 ]
 
 [[package]]
