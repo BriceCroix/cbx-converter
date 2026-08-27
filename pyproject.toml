@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "img2pdf>=0.6.3",
-    "tqdm>=4.68.3",
+    "natsort>=8.4.0",
+    "tqdm>=4.70.0",
 ]

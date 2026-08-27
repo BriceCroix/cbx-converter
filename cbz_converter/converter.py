@@ -1,9 +1,12 @@
 import os
+import shutil
 import tempfile
 import zipfile
+from pathlib import Path
 
 import img2pdf
 import PIL
+from natsort import natsorted
 from tqdm import tqdm
 
 
@@ -38,20 +41,28 @@ def cbz_convert(
     os.makedirs(os.path.dirname(output), exist_ok=True)
     with (
         zipfile.ZipFile(input, "r") as zf,
-        tempfile.TemporaryDirectory() as tempdir,
+        tempfile.TemporaryDirectory() as input_tempdir,
+        tempfile.TemporaryDirectory() as output_tempdir,
     ):
         try:
-            zf.extractall(path=tempdir)
-            images_filenames_in = [
-                os.path.join(tempdir, filename)
-                for filename in sorted(os.listdir(tempdir))
-            ]
+            zf.extractall(path=input_tempdir)
+            images_filenames_in = natsorted(
+                [
+                    os.path.relpath(p, start=input_tempdir)
+                    for p in Path(input_tempdir).rglob("*")
+                    if p.is_file()
+                ]
+            )
             images_filenames_out = []
+
+            # If there is anything to do on the images themselves
             if quality is not None or max_size is not None or image_format is not None:
                 for image_filename_in in tqdm(
                     images_filenames_in, desc="Processing", leave=False
                 ):
-                    image = PIL.Image.open(image_filename_in)
+                    image = PIL.Image.open(
+                        os.path.join(input_tempdir, image_filename_in)
+                    )
 
                     if max_size is not None:
                         size = max(image.size)
@@ -71,6 +82,7 @@ def cbz_convert(
 
                     if image_file_ext_out[0] != ".":
                         image_file_ext_out = "." + image_file_ext_out
+
                     if image_file_ext_out == ".jpeg":
                         image_file_ext_out = ".jpg"
                     if image_file_ext_in == ".jpeg":
@@ -88,22 +100,39 @@ def cbz_convert(
 
                     # Only use quality argument if provided.
                     quality_dict = {"quality": quality} if quality is not None else {}
-                    image.save(image_filename_out, optimize=True, **quality_dict)
+
+                    image_filename_out_absolute = os.path.join(
+                        output_tempdir, image_filename_out
+                    )
+                    os.makedirs(
+                        os.path.dirname(image_filename_out_absolute), exist_ok=True
+                    )
+                    image.save(
+                        image_filename_out_absolute,
+                        optimize=True,
+                        **quality_dict,
+                    )
                     images_filenames_out.append(image_filename_out)
             else:
+                shutil.copytree(input_tempdir, output_tempdir, dirs_exist_ok=True)
                 images_filenames_out = images_filenames_in
 
             output_ext = os.path.splitext(output)[1].lower()
             if output_ext == ".pdf":
+                images_filenames_out_absolute = [
+                    os.path.join(output_tempdir, image_filename_out)
+                    for image_filename_out in images_filenames_out
+                ]
                 with open(output, "wb") as out:
-                    out.write(img2pdf.convert(images_filenames_out))
+                    out.write(img2pdf.convert(images_filenames_out_absolute))
             elif output_ext == ".cbz":
                 with zipfile.ZipFile(output, "w") as out:
                     for image_filename_out in tqdm(
                         images_filenames_out, desc="Writing", leave=False
                     ):
                         out.write(
-                            image_filename_out, os.path.basename(image_filename_out)
+                            os.path.join(output_tempdir, image_filename_out),
+                            image_filename_out,
                         )
             else:
                 raise f"Unsupported format : {output_ext}"
