@@ -1,6 +1,6 @@
-from pathlib import Path
-import re
 import os
+import re
+from pathlib import Path
 
 
 def compute_output_path(input_path: str, output_path_pattern: str = "%F.pdf") -> str:
@@ -51,7 +51,7 @@ def compute_output_path(input_path: str, output_path_pattern: str = "%F.pdf") ->
     }
 
     # Compile a regex pattern to match any of the defined tokens safely in a single pass
-    pattern = re.compile("|".join(re.escape(key) for key in replacements.keys()))
+    pattern = re.compile("|".join(re.escape(key) for key in replacements))
 
     # Perform the substitution using a lookup lambda function
     return pattern.sub(lambda match: replacements[match.group(0)], output_path_pattern)

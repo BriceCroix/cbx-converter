@@ -4,7 +4,6 @@ import zipfile
 
 import img2pdf
 import PIL
-
 from tqdm import tqdm
 
 
@@ -110,6 +109,6 @@ def cbz_convert(
             else:
                 raise f"Unsupported format : {output_ext}"
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error converting file {input} : {e}")
             return False

@@ -1,6 +1,7 @@
 import argparse
 import os
 from pathlib import Path
+
 from tqdm import tqdm
 
 from .converter import cbz_convert
@@ -57,7 +58,7 @@ Examples :
     if os.path.isfile(args.cbz):
         files = [args.cbz]
     else:
-        files = sorted(list(Path(args.cbz).rglob("*.[cC][bB][zZ]")))
+        files = sorted(Path(args.cbz).rglob("*.[cC][bB][zZ]"))
 
     for i_file in (pbar := tqdm(files)):
         pbar.set_postfix_str(i_file)
