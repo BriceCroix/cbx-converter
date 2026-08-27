@@ -1,4 +1,4 @@
-# CBZ converter
+# CBX converter
 
 Simple module to convert Comic Book Archives (`.cbz`/`.cbr`/`.cbt`/`.cba`/`.cb7`) files to pdf or to
 different archive types.
@@ -10,7 +10,7 @@ containing `webp` images).
 ## How to use
 
 ```bash
-uv run cbz_converter <CBX> [--output <OUT>]
+uv run cbx_converter <CBX> [--output <OUT>]
 ```
 
 - `<CBX>` can either be a `.cbz`/`.cbr`/`.cbt`/`.cba`/`.cb7` file or a directory containing files.
@@ -19,5 +19,5 @@ uv run cbz_converter <CBX> [--output <OUT>]
 Use the following to learn about all options :
 
 ```bash
-uv run cbz_converter --help
+uv run cbx_converter --help
 ```

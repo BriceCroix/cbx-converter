@@ -1,7 +1,7 @@
 [project]
-name = "cbz-converter"
+name = "cbx-converter"
 version = "0.1.0"
-description = "Add your description here"
+description = "Module to convert Comic Book Archives to other types"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -22,7 +22,7 @@ dev = [
 ]
 
 [project.scripts]
-cbz_converter = "cbz_converter.__main__:main"
+cbx_converter = "cbx_converter.__main__:main"
 
 [build-system]
 requires = ["uv_build>=0.12.7,<0.13.0"]
@@ -38,7 +38,7 @@ addopts = [
 ]
 
 [tool.coverage.run]
-source = ["src/cbz_converter"]
+source = ["src/cbx_converter"]
 branch = true
 
 [tool.coverage.report]

@@ -7,7 +7,7 @@ import PIL
 import puremagic
 
 import tests as tests_package
-from cbz_converter.converter import cbz_convert
+from cbx_converter.converter import cbz_convert
 
 
 def get_asset(filename: str) -> str:
