@@ -47,11 +47,7 @@ def cbz_convert(
                 for filename in sorted(os.listdir(tempdir))
             ]
             images_filenames_out = []
-            if (
-                quality is not None
-                or max_size is not None
-                or image_format is not None
-            ):
+            if quality is not None or max_size is not None or image_format is not None:
                 for image_filename_in in tqdm(
                     images_filenames_in, desc="Processing", leave=False
                 ):
@@ -59,10 +55,13 @@ def cbz_convert(
 
                     if max_size is not None:
                         size = max(image.size)
-                        if (size > max_size):
+                        if size > max_size:
                             ratio = max_size / size
                             image = image.resize(
-                                size=(int(image.width * ratio), int(image.height * ratio)),
+                                size=(
+                                    int(image.width * ratio),
+                                    int(image.height * ratio),
+                                ),
                                 resample=PIL.Image.Resampling.LANCZOS,
                             )
 
