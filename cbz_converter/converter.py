@@ -10,10 +10,40 @@ from natsort import natsorted
 from tqdm import tqdm
 
 
+def safe_img_extension(ext: str) -> str:
+    """Converts an image extension to its canonical equivalent.
+
+    Parameters
+    ----------
+    ext : str
+        The extension to check.
+
+    Returns
+    -------
+    str
+        The canonical equivalent of given extension
+
+    Example
+    -------
+
+    >>> safe_img_extension("JPEG")
+    'jpg'
+    >>> safe_img_extension("jpe")
+    'jpg'
+    >>> safe_img_extension("png")
+    'png'
+    """
+    match ext.lower().strip():
+        case "jpg" | "jpeg" | "jpe" | "jif" | "jfif" | "jfi":
+            return "jpg"
+        case _:
+            return ext.lower().strip()
+
+
 def cbz_convert(
     input: str,
     output: str,
-    image_format: str | None = None,
+    image_formats: list[str] | None = None,
     quality: int | None = None,
     max_size: int | None = None,
 ) -> bool:
@@ -25,8 +55,8 @@ def cbz_convert(
         Path to a cbz file.
     output : str
         Path to file to be created.
-    image_format : str | None (optional)
-        If provided, the file format to be forced for each image in the cbz archive (jpg, png...).
+    image_formats : str | None (optional)
+        If provided, the file formats to be forced for each image in the cbz archive (jpg, png...).
     quality : int | None (optional)
         If provided, allows to lower the quality of the images (0 is worst, 100 is best).
         Only supported for file types : avif, jpg, webp.
@@ -39,6 +69,10 @@ def cbz_convert(
         True for success.
     """
     os.makedirs(os.path.dirname(output), exist_ok=True)
+
+    if image_formats is not None:
+        image_formats = list({safe_img_extension(f) for f in image_formats})
+
     with (
         zipfile.ZipFile(input, "r") as zf,
         tempfile.TemporaryDirectory() as input_tempdir,
@@ -56,7 +90,7 @@ def cbz_convert(
             images_filenames_out = []
 
             # If there is anything to do on the images themselves
-            if quality is not None or max_size is not None or image_format is not None:
+            if quality is not None or max_size is not None or image_formats is not None:
                 for image_filename_in in tqdm(
                     images_filenames_in, desc="Processing", leave=False
                 ):
@@ -76,17 +110,17 @@ def cbz_convert(
                                 resample=PIL.Image.Resampling.LANCZOS,
                             )
 
-                    image_file_ext_in = os.path.splitext(image_filename_in)[1]
-                    image_file_ext_out = image_format or image_file_ext_in
-                    image_file_ext_out = image_file_ext_out.lower()
+                    image_file_ext_in = safe_img_extension(
+                        os.path.splitext(image_filename_in)[1]
+                    )
+                    image_file_ext_out = (
+                        image_file_ext_in
+                        if image_formats is None or image_file_ext_in in image_formats
+                        else image_formats[0]
+                    )
 
                     if image_file_ext_out[0] != ".":
                         image_file_ext_out = "." + image_file_ext_out
-
-                    if image_file_ext_out == ".jpeg":
-                        image_file_ext_out = ".jpg"
-                    if image_file_ext_in == ".jpeg":
-                        image_file_ext_in = ".jpg"
 
                     if image_file_ext_out != image_file_ext_in:
                         image_filename_out = (
@@ -140,3 +174,9 @@ def cbz_convert(
         except Exception as e:  # noqa: BLE001
             print(f"Error converting file {input} : {e}")
             return False
+
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod(verbose=True)

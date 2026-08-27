@@ -39,8 +39,9 @@ Examples :
     parser.add_argument(
         "-f",
         "--format",
-        help="Image format to be forced on each image (jpg, png...). Can be useful when creating cbz"
-        " but target device does not support all image types (e.g webp).",
+        help="Comma-separated list of accepted image formats in the comic book archives (jpg, png, "
+        "etc...). If an image format that is not in the list is encountered, the image will be "
+        "converted to the first format in this list.",
         type=str,
     )
 
@@ -67,7 +68,7 @@ Examples :
         if not cbz_convert(
             i_file,
             o_file,
-            image_format=args.format,
+            image_formats=[f.strip().lower() for f in args.format.split(",")],
             quality=args.quality,
             max_size=args.size,
         ):
