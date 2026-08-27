@@ -55,7 +55,7 @@ def safe_extension(ext: str) -> str:
 def cbz_convert(
     input: str,
     output: str,
-    image_formats: list[str] | None = None,
+    image_formats: list[str] | str | None = None,
     quality: int | None = None,
     max_size: int | None = None,
 ) -> bool:
@@ -67,7 +67,7 @@ def cbz_convert(
         Path to a cbz file.
     output : str
         Path to file to be created.
-    image_formats : str | None (optional)
+    image_formats : list[str] | str | None (optional)
         If provided, the file formats to be forced for each image in the cbz archive
         (jpg, png...).
     quality : int | None (optional)
@@ -84,7 +84,10 @@ def cbz_convert(
     os.makedirs(os.path.dirname(output), exist_ok=True)
 
     if image_formats is not None:
-        image_formats = list({safe_extension(f) for f in image_formats})
+        if isinstance(image_formats, str):
+            image_formats = [image_formats]
+        # remove duplicates
+        image_formats = list(dict.fromkeys([safe_extension(f) for f in image_formats]))
 
     with (
         tempfile.TemporaryDirectory() as input_tempdir,
