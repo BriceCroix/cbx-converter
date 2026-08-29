@@ -108,7 +108,7 @@ def cbz_convert(
                         sf.extractall(path=input_tempdir)
                 case "cbt" | "tar":
                     with tarfile.TarFile(input, "r") as tf:
-                        tf.extractall(path=input_tempdir)
+                        tf.extractall(path=input_tempdir, filter='tar')
                 case "cba" | "ace":
                     with acefile.open(input, "r") as af:
                         af.extractall(path=input_tempdir)
