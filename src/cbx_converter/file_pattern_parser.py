@@ -1,4 +1,3 @@
-import os
 import re
 from pathlib import Path
 
@@ -29,16 +28,17 @@ def compute_output_path(input_path: str, output_path_pattern: str = "%F.pdf") ->
     Examples
     --------
 
-    >>> compute_output_path("/home/dir/myfile.cbz", "%F.pdf")
-    '/home/dir/myfile.pdf'
-    >>> compute_output_path("/home/dir/myfile.cbz", "%P/%p-%f.pdf")
-    '/home/dir/dir-myfile.pdf'
-    >>> compute_output_path("/home/dir/myfile.cbz", "%P-converted/%f.%e.pdf")
-    '/home/dir-converted/myfile.cbz.pdf'
-    >>> compute_output_path("/home/documents/dir/myfile.cbz", "%Q-converted/%p/%f.pdf")
-    '/home/documents-converted/dir/myfile.pdf'
+    >>> assert compute_output_path("/home/dir/myfile.cbz", "%F.pdf") == \
+        Path('/home/dir/myfile.pdf')
+    >>> assert compute_output_path("/home/dir/myfile.cbz", "%P/%p-%f.pdf") == \
+        Path('/home/dir/dir-myfile.pdf')
+    >>> assert compute_output_path("/home/dir/myfile.cbz", "%P-converted/%f.%e.pdf") == \
+        Path('/home/dir-converted/myfile.cbz.pdf')
+    >>> assert compute_output_path("/home/documents/dir/myfile.cbz", "%Q-converted/%p/%f.pdf") == \
+        Path('/home/documents-converted/dir/myfile.pdf')
     """
-    path = Path(os.path.abspath(input_path))
+
+    path = Path(input_path)
 
     # Map the matchers to their corresponding path components
     replacements = {
@@ -54,4 +54,6 @@ def compute_output_path(input_path: str, output_path_pattern: str = "%F.pdf") ->
     pattern = re.compile("|".join(re.escape(key) for key in replacements))
 
     # Perform the substitution using a lookup lambda function
-    return pattern.sub(lambda match: replacements[match.group(0)], output_path_pattern)
+    return Path(
+        pattern.sub(lambda match: replacements[match.group(0)], output_path_pattern)
+    )
