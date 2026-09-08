@@ -60,6 +60,7 @@ def cbz_convert(
     max_size: int | None = None,
 ) -> bool:
     """Converts a cbz file into another file.
+    If there is nothing to do, the file is simply copied to destination.
 
     Parameters
     ----------
@@ -94,9 +95,13 @@ def cbz_convert(
         tempfile.TemporaryDirectory() as output_tempdir,
     ):
         try:
-            magic_extension = safe_extension(puremagic.magic_file(input)[0].extension)
+            input_magic_extension = safe_extension(
+                puremagic.magic_file(input)[0].extension
+            )
 
-            match magic_extension:
+            images_modified = False
+
+            match input_magic_extension:
                 case "cbz" | "zip":
                     with zipfile.ZipFile(input, "r") as zf:
                         zf.extractall(path=input_tempdir)
@@ -114,7 +119,7 @@ def cbz_convert(
                         af.extractall(path=input_tempdir)
                 case _:
                     raise RuntimeError(
-                        f'Unrecognized magic extension "{magic_extension}"'
+                        f'Unrecognized magic extension "{input_magic_extension}"'
                     )
 
             images_filenames_in = natsorted(
@@ -146,15 +151,18 @@ def cbz_convert(
                                 ),
                                 resample=PIL.Image.Resampling.LANCZOS,
                             )
+                            images_modified = True
 
                     image_file_ext_in = safe_extension(
                         os.path.splitext(image_filename_in)[1]
                     )
-                    image_file_ext_out = safe_extension(
-                        image_file_ext_in
-                        if image_formats is None or image_file_ext_in in image_formats
-                        else image_formats[0]
-                    )
+                    image_file_ext_out = image_file_ext_in
+                    if (
+                        image_formats is not None
+                        and image_file_ext_in not in image_formats
+                    ):
+                        image_file_ext_out = image_formats[0]
+                        images_modified = True
 
                     image_filename_out = (
                         os.path.splitext(image_filename_in)[0]
@@ -166,7 +174,10 @@ def cbz_convert(
                         image = image.convert("RGB")
 
                     # Only use quality argument if provided.
-                    quality_dict = {"quality": quality} if quality is not None else {}
+                    quality_dict = {}
+                    if quality is not None:
+                        images_modified = True
+                        quality_dict = {"quality": quality}
 
                     image_filename_out_absolute = os.path.join(
                         output_tempdir, image_filename_out
@@ -185,55 +196,59 @@ def cbz_convert(
                 images_filenames_out = images_filenames_in
 
             output_ext = safe_extension(os.path.splitext(output)[1])
-            match output_ext:
-                case "pdf":
-                    images_filenames_out_absolute = [
-                        os.path.join(output_tempdir, image_filename_out)
-                        for image_filename_out in images_filenames_out
-                    ]
-                    with open(output, "wb") as out:
-                        out.write(img2pdf.convert(images_filenames_out_absolute))
-                case "cbz" | "zip":
-                    with zipfile.ZipFile(output, "w") as out:
-                        for image_filename_out in tqdm(
-                            images_filenames_out, desc="Writing", leave=False
-                        ):
-                            out.write(
-                                os.path.join(output_tempdir, image_filename_out),
-                                image_filename_out,
-                            )
-                case "cbr" | "rar" | "cba" | "ace":
-                    # rarfile and acefile would throw an exception anyway.
-                    raise RuntimeError(
-                        f"{output_ext} files can only be read but not written"
-                    )
-                case "cb7" | "7z":
-                    with py7zr.SevenZipFile(output, "w") as out:
-                        for image_filename_out in tqdm(
-                            images_filenames_out, desc="Writing", leave=False
-                        ):
-                            out.write(
-                                os.path.join(output_tempdir, image_filename_out),
-                                image_filename_out,
-                            )
-                case "cbt" | "tar":
-                    with tarfile.TarFile(output, "w") as out:
-                        for image_filename_out in tqdm(
-                            images_filenames_out, desc="Writing", leave=False
-                        ):
-                            image_filename_out_absolute = os.path.join(
-                                output_tempdir, image_filename_out
-                            )
-                            with open(image_filename_out_absolute, "rb") as img:
-                                out.addfile(
-                                    out.gettarinfo(
-                                        image_filename_out_absolute,
-                                        image_filename_out,
-                                    ),
-                                    img,
+
+            if images_modified or output_ext != input_magic_extension:
+                match output_ext:
+                    case "pdf":
+                        images_filenames_out_absolute = [
+                            os.path.join(output_tempdir, image_filename_out)
+                            for image_filename_out in images_filenames_out
+                        ]
+                        with open(output, "wb") as out:
+                            out.write(img2pdf.convert(images_filenames_out_absolute))
+                    case "cbz" | "zip":
+                        with zipfile.ZipFile(output, "w") as out:
+                            for image_filename_out in tqdm(
+                                images_filenames_out, desc="Writing", leave=False
+                            ):
+                                out.write(
+                                    os.path.join(output_tempdir, image_filename_out),
+                                    image_filename_out,
                                 )
-                case _:
-                    raise f"Unsupported format : {output_ext}"
+                    case "cbr" | "rar" | "cba" | "ace":
+                        # rarfile and acefile would throw an exception anyway.
+                        raise RuntimeError(
+                            f"{output_ext} files can only be read but not written"
+                        )
+                    case "cb7" | "7z":
+                        with py7zr.SevenZipFile(output, "w") as out:
+                            for image_filename_out in tqdm(
+                                images_filenames_out, desc="Writing", leave=False
+                            ):
+                                out.write(
+                                    os.path.join(output_tempdir, image_filename_out),
+                                    image_filename_out,
+                                )
+                    case "cbt" | "tar":
+                        with tarfile.TarFile(output, "w") as out:
+                            for image_filename_out in tqdm(
+                                images_filenames_out, desc="Writing", leave=False
+                            ):
+                                image_filename_out_absolute = os.path.join(
+                                    output_tempdir, image_filename_out
+                                )
+                                with open(image_filename_out_absolute, "rb") as img:
+                                    out.addfile(
+                                        out.gettarinfo(
+                                            image_filename_out_absolute,
+                                            image_filename_out,
+                                        ),
+                                        img,
+                                    )
+                    case _:
+                        raise f"Unsupported format : {output_ext}"
+            else:
+                shutil.copyfile(input, output)
             return True
         except Exception as e:  # noqa: BLE001
             print(f"Error converting file {input} : {e}")
