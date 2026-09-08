@@ -1,3 +1,4 @@
+import filecmp
 import os
 import zipfile
 from importlib import resources
@@ -155,3 +156,13 @@ def test_convert_cbz_to_bad(tmp_path):
         get_asset("bobby_make_believe_sample_dir.cbz"),
         out,
     )
+
+def test_convert_cbz_identic(tmp_path):
+    input = get_asset("bobby_make_believe_sample.cbz")
+    out = os.path.join(tmp_path, "out.cbz")
+    assert cbz_convert(
+        input,
+        out,
+        image_formats="jpg",
+    )
+    assert filecmp.cmp(input, out)
