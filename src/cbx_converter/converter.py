@@ -140,6 +140,8 @@ def cbx_convert(
                         input_tempdir, image_filename_in
                     )
 
+                    image_modified = False
+
                     with PIL.Image.open(image_filename_in_absolute) as img:
                         # .copy() loads the image into memory and detaches it from the physical file
                         # This is because on windows PIL keeps a handle on the file
@@ -156,7 +158,7 @@ def cbx_convert(
                                 ),
                                 resample=PIL.Image.Resampling.LANCZOS,
                             )
-                            images_modified = True
+                            image_modified = True
 
                     image_file_ext_in = safe_extension(
                         os.path.splitext(image_filename_in)[1]
@@ -167,7 +169,7 @@ def cbx_convert(
                         and image_file_ext_in not in image_formats
                     ):
                         image_file_ext_out = image_formats[0]
-                        images_modified = True
+                        image_modified = True
 
                     image_filename_out = (
                         os.path.splitext(image_filename_in)[0]
@@ -175,13 +177,10 @@ def cbx_convert(
                         + image_file_ext_out
                     )
 
-                    if image_file_ext_out == "jpg":
-                        image = image.convert("RGB")
-
                     # Only use quality argument if provided.
                     quality_dict = {}
                     if quality is not None:
-                        images_modified = True
+                        image_modified = True
                         quality_dict = {"quality": quality}
 
                     image_filename_out_absolute = os.path.join(
@@ -190,12 +189,20 @@ def cbx_convert(
                     os.makedirs(
                         os.path.dirname(image_filename_out_absolute), exist_ok=True
                     )
-                    image.save(
-                        image_filename_out_absolute,
-                        optimize=True,
-                        **quality_dict,
-                    )
+                    if image_modified:
+                        if image_file_ext_out == "jpg":
+                            image = image.convert("RGB")
+                        image.save(
+                            image_filename_out_absolute,
+                            optimize=True,
+                            **quality_dict,
+                        )
+                    else:
+                        shutil.copyfile(
+                            image_filename_in_absolute, image_filename_out_absolute
+                        )
                     images_filenames_out.append(image_filename_out)
+                    images_modified = images_modified or image_modified
             else:
                 shutil.copytree(input_tempdir, output_tempdir, dirs_exist_ok=True)
                 images_filenames_out = images_filenames_in
