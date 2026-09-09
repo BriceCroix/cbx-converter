@@ -113,7 +113,7 @@ def cbx_convert(
                         sf.extractall(path=input_tempdir)
                 case "cbt" | "tar":
                     with tarfile.TarFile(input, "r") as tf:
-                        tf.extractall(path=input_tempdir, filter='tar')
+                        tf.extractall(path=input_tempdir, filter="tar")
                 case "cba" | "ace":
                     with acefile.open(input, "r") as af:
                         af.extractall(path=input_tempdir)
@@ -136,9 +136,14 @@ def cbx_convert(
                 for image_filename_in in tqdm(
                     images_filenames_in, desc="Processing", leave=False
                 ):
-                    image = PIL.Image.open(
-                        os.path.join(input_tempdir, image_filename_in)
+                    image_filename_in_absolute = os.path.join(
+                        input_tempdir, image_filename_in
                     )
+
+                    with PIL.Image.open(image_filename_in_absolute) as img:
+                        # .copy() loads the image into memory and detaches it from the physical file
+                        # This is because on windows PIL keeps a handle on the file
+                        image = img.copy()
 
                     if max_size is not None:
                         size = max(image.size)
