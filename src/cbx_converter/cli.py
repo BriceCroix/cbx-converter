@@ -5,17 +5,17 @@ from pathlib import Path
 from natsort import natsorted
 from tqdm import tqdm
 
-from .converter import cbz_convert
+from .converter import cbx_convert
 from .file_pattern_parser import compute_output_path
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="CBZ converter CLI", formatter_class=argparse.RawTextHelpFormatter
+        description="CBX converter CLI", formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "cbz",
-        help="Input cbz file, or directory containing cbz files, that will be scanned recursively.",
+        "cbx",
+        help="Input cbz, cbr, cbt, cba, or cb7 file, or directory containing cbx files, that will be scanned recursively.",
     )
     parser.add_argument(
         "-o",
@@ -57,15 +57,15 @@ Examples :
     )
     args = parser.parse_args()
 
-    if os.path.isfile(args.cbz):
-        files = [args.cbz]
+    if os.path.isfile(args.cbx):
+        files = [args.cbx]
     else:
-        files = natsorted(Path(args.cbz).rglob("*.[cC][bB][zZrRaAtT7]"))
+        files = natsorted(Path(args.cbx).rglob("*.[cC][bB][zZrRaAtT7]"))
 
     for i_file in (pbar := tqdm(files)):
         pbar.set_postfix_str(i_file)
         o_file = compute_output_path(i_file, args.output)
-        if not cbz_convert(
+        if not cbx_convert(
             i_file,
             o_file,
             image_formats=[f.strip().lower() for f in args.format.split(",")],

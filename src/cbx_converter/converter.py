@@ -52,7 +52,7 @@ def safe_extension(ext: str) -> str:
             return ext
 
 
-def cbz_convert(
+def cbx_convert(
     input: str,
     output: str,
     image_formats: list[str] | str | None = None,

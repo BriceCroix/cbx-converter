@@ -8,7 +8,7 @@ import PIL
 import puremagic
 
 import tests as tests_package
-from cbx_converter.converter import cbz_convert
+from cbx_converter.converter import cbx_convert
 
 
 def get_asset(filename: str) -> str:
@@ -17,7 +17,7 @@ def get_asset(filename: str) -> str:
 
 def test_convert_cb7_to_cbz(tmp_path):
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbz_convert(
+    assert cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
     )
@@ -26,7 +26,7 @@ def test_convert_cb7_to_cbz(tmp_path):
 
 def test_convert_cb7_to_cbt(tmp_path):
     out = os.path.join(tmp_path, "out.cbt")
-    assert cbz_convert(
+    assert cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
     )
@@ -35,7 +35,7 @@ def test_convert_cb7_to_cbt(tmp_path):
 
 def test_convert_cb7_to_cbr(tmp_path):
     out = os.path.join(tmp_path, "out.cbr")
-    assert not cbz_convert(
+    assert not cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
     )
@@ -43,7 +43,7 @@ def test_convert_cb7_to_cbr(tmp_path):
 
 def test_convert_cb7_to_cba(tmp_path):
     out = os.path.join(tmp_path, "out.cba")
-    assert not cbz_convert(
+    assert not cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
     )
@@ -51,7 +51,7 @@ def test_convert_cb7_to_cba(tmp_path):
 
 def test_convert_cb7_to_pdf(tmp_path):
     out = os.path.join(tmp_path, "out.pdf")
-    assert cbz_convert(
+    assert cbx_convert(
         get_asset("bobby_make_believe_sample_dir.cb7"),
         out,
     )
@@ -61,7 +61,7 @@ def test_convert_cb7_to_pdf(tmp_path):
 def test_convert_cbz_downscale(tmp_path):
     max_size = 100
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbz_convert(
+    assert cbx_convert(
         get_asset("bobby_make_believe_sample.cbz"),
         out,
         max_size=max_size,
@@ -81,7 +81,7 @@ def test_convert_cbz_downscale(tmp_path):
 def test_convert_cbz_downscale_very_large(tmp_path):
     max_size = 1000000
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbz_convert(
+    assert cbx_convert(
         get_asset("bobby_make_believe_sample.cbz"),
         out,
         max_size=max_size,
@@ -101,7 +101,7 @@ def test_convert_cbz_downscale_very_large(tmp_path):
 def test_convert_cbt_downgrade(tmp_path):
     asset = get_asset("bobby_make_believe_sample_dir.cbt")
     out = os.path.join(tmp_path, "out.cbt")
-    assert cbz_convert(
+    assert cbx_convert(
         asset,
         out,
         image_formats="jpeg",
@@ -114,7 +114,7 @@ def test_convert_cbt_downgrade(tmp_path):
 def test_convert_cbr_to_cbz_with_gif(tmp_path):
     asset = get_asset("bobby_make_believe_sample.cbr")
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbz_convert(
+    assert cbx_convert(
         asset,
         out,
         image_formats=["gif", "png"],
@@ -132,7 +132,7 @@ def test_convert_cbr_to_cbz_with_gif(tmp_path):
 def test_convert_cbz_to_cb7_do_all(tmp_path):
     asset = get_asset("bobby_make_believe_sample_dir.cbz")
     out = os.path.join(tmp_path, "out.cb7")
-    assert cbz_convert(
+    assert cbx_convert(
         asset,
         out,
         image_formats=["png", "webp"],
@@ -144,7 +144,7 @@ def test_convert_cbz_to_cb7_do_all(tmp_path):
 
 def test_convert_bad_to_cbz(tmp_path):
     out = os.path.join(tmp_path, "out.cbz")
-    assert not cbz_convert(
+    assert not cbx_convert(
         get_asset("README.md"),
         out,
     )
@@ -152,7 +152,7 @@ def test_convert_bad_to_cbz(tmp_path):
 
 def test_convert_cbz_to_bad(tmp_path):
     out = os.path.join(tmp_path, "absolutely.not")
-    assert not cbz_convert(
+    assert not cbx_convert(
         get_asset("bobby_make_believe_sample_dir.cbz"),
         out,
     )
@@ -160,7 +160,7 @@ def test_convert_cbz_to_bad(tmp_path):
 def test_convert_cbz_identic(tmp_path):
     input = get_asset("bobby_make_believe_sample.cbz")
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbz_convert(
+    assert cbx_convert(
         input,
         out,
         image_formats="jpg",
