@@ -3,9 +3,10 @@ import os
 from pathlib import Path
 
 from natsort import natsorted
+from prettytable import PrettyTable
 from tqdm import tqdm
 
-from .converter import cbx_convert
+from .converter import ConvertResult, cbx_convert
 from .file_pattern_parser import compute_output_path
 
 
@@ -62,14 +63,29 @@ Examples :
     else:
         files = natsorted(Path(args.cbx).rglob("*.[cC][bB][zZrRaAtT7]"))
 
+    table = PrettyTable()
+    table.field_names = ["Input file", "Output file", "Status", "File size change"]
     for i_file in (pbar := tqdm(files)):
-        pbar.set_postfix_str(i_file)
+        pbar.set_postfix_str(str(i_file))
         o_file = compute_output_path(i_file, args.output)
-        if not cbx_convert(
+
+        res = cbx_convert(
             i_file,
             o_file,
-            image_formats=[f.strip().lower() for f in args.format.split(",")],
+            image_formats=[f.strip().lower() for f in args.format.split(",")]
+            if args.format is not None
+            else None,
             quality=args.quality,
             max_size=args.size,
-        ):
-            print(f"ERROR on converting {i_file} to {o_file}")
+        )
+        table.add_row(
+            [
+                i_file,
+                o_file,
+                str(res),
+                f"{100.0 * os.path.getsize(o_file) / os.path.getsize(i_file) - 100:.1f} %"
+                if res != ConvertResult.Error
+                else "NA",
+            ]
+        )
+    print(table)

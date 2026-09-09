@@ -3,6 +3,7 @@ import shutil
 import tarfile
 import tempfile
 import zipfile
+from enum import Enum
 from pathlib import Path
 
 import acefile
@@ -52,13 +53,31 @@ def safe_extension(ext: str) -> str:
             return ext
 
 
+class ConvertResult(Enum):
+    Copied = 0
+    Converted = 1
+    Error = -1
+
+    def __str__(self):
+        match self:
+            case ConvertResult.Copied:
+                return "Copied"
+            case ConvertResult.Converted:
+                return "Converted"
+            case ConvertResult.Error:
+                return "Error"
+
+    def __bool__(self):
+        return self != ConvertResult.Error
+
+
 def cbx_convert(
     input: str,
     output: str,
     image_formats: list[str] | str | None = None,
     quality: int | None = None,
     max_size: int | None = None,
-) -> bool:
+) -> ConvertResult:
     """Converts a cbz file into another file.
     If there is nothing to do, the file is simply copied to destination.
 
@@ -259,9 +278,10 @@ def cbx_convert(
                                     )
                     case _:
                         raise f"Unsupported format : {output_ext}"
+                return ConvertResult.Converted
             else:
                 shutil.copyfile(input, output)
-            return True
+                return ConvertResult.Copied
         except Exception as e:  # noqa: BLE001
             print(f"Error converting file {input} : {e}")
-            return False
+            return ConvertResult.Error
