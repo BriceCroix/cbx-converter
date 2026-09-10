@@ -6,7 +6,7 @@ from natsort import natsorted
 from prettytable import PrettyTable
 from tqdm import tqdm
 
-from .converter import cbx_convert
+from .converter import ConvertResult, cbx_convert
 from .file_pattern_parser import compute_output_path
 
 
@@ -56,6 +56,13 @@ Examples :
     parser.add_argument(
         "-s", "--size", help="Maximum width and height of images.", type=int
     )
+    parser.add_argument(
+        "-i",
+        "--ignore",
+        "--skip",
+        help="Skip copying files to destination when nothing to do.",
+        action="store_true",
+    )
     args = parser.parse_args()
 
     if os.path.isfile(args.cbx):
@@ -77,6 +84,7 @@ Examples :
             else None,
             quality=args.quality,
             max_size=args.size,
+            skip_when_nothing_to_do=args.ignore,
         )
         table.add_row(
             [
@@ -84,7 +92,7 @@ Examples :
                 o_file,
                 str(res.value) if res.is_ok() else f"Error : {res.error}",
                 f"{100.0 * os.path.getsize(o_file) / os.path.getsize(i_file) - 100:+.1f} %"
-                if res.is_ok()
+                if res.is_ok() and res.value != ConvertResult.Skipped
                 else "NA",
             ]
         )

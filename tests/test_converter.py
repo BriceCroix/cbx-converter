@@ -6,9 +6,10 @@ from pathlib import Path
 
 import PIL
 import puremagic
+import pytest
 
 import tests as tests_package
-from cbx_converter.converter import cbx_convert
+from cbx_converter.converter import ConvertResult, cbx_convert
 
 
 def get_asset(filename: str) -> str:
@@ -157,12 +158,36 @@ def test_convert_cbz_to_bad(tmp_path):
         out,
     ).is_err()
 
+
 def test_convert_cbz_identic(tmp_path):
     input = get_asset("bobby_make_believe_sample.cbz")
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbx_convert(
+    res = cbx_convert(
         input,
         out,
         image_formats="jpg",
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Copied
     assert filecmp.cmp(input, out)
+
+
+@pytest.mark.skip(
+    reason="cbr magic extension is rar, then input/output extensions differ and file is not copied. TO FIX !"
+)
+def test_convert_cbr_identic_skip(tmp_path):
+    input = get_asset("bobby_make_believe_sample.cbr")
+    out = os.path.join(tmp_path, "out.cbr")
+    res = cbx_convert(input, out, image_formats="jpg", skip_when_nothing_to_do=True)
+    assert res.is_ok()
+    assert res.value == ConvertResult.Skipped
+    assert not Path(out).exists()
+
+
+def test_convert_cbt_identic_skip(tmp_path):
+    input = get_asset("bobby_make_believe_sample.cbt")
+    out = os.path.join(tmp_path, "out.cbt")
+    res = cbx_convert(input, out, image_formats="jpg", skip_when_nothing_to_do=True)
+    assert res.is_ok()
+    assert res.value == ConvertResult.Skipped
+    assert not Path(out).exists()

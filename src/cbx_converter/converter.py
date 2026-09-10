@@ -57,6 +57,7 @@ def safe_extension(ext: str) -> str:
 class ConvertResult(Enum):
     Copied = 0
     Converted = 1
+    Skipped = 2
 
     def __str__(self):
         match self:
@@ -75,6 +76,7 @@ def cbx_convert(
     image_formats: list[str] | str | None = None,
     quality: int | None = None,
     max_size: int | None = None,
+    skip_when_nothing_to_do: bool = False,
 ) -> ConvertResult:
     """Converts a cbz file into another file.
     If there is nothing to do, the file is simply copied to destination.
@@ -93,11 +95,13 @@ def cbx_convert(
         Only supported for file types : avif, jpg, webp.
     max_size : int | None (optional)
         If provided, images will be resized with this value as their width or height.
+    skip_when_nothing_to_do : bool
+        If True, Skips file when nothing to do, otherwise file is copied to destination.
 
     Returns
     -------
-    bool
-        True for success.
+    ConvertResult
+        Operation performed on file.
     """
     os.makedirs(os.path.dirname(output), exist_ok=True)
 
@@ -268,5 +272,7 @@ def cbx_convert(
                     raise RuntimeError(f'Unsupported output format "{output_ext}"')
             return ConvertResult.Converted
         else:
+            if skip_when_nothing_to_do:
+                return ConvertResult.Skipped
             shutil.copyfile(input, output)
             return ConvertResult.Copied
