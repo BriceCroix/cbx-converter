@@ -1,0 +1,29 @@
+name: Build app
+on: [push]
+jobs:
+  build-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v7.0.1
+      - name: Install uv
+        # https://github.com/astral-sh/setup-uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.12.7"
+      - name: Set up Python
+        run: uv python install
+      - name: Install the project
+        run: uv sync --locked --all-extras
+      - name: Generate standalone app
+        run: >
+          uvx pyinstaller exe.py
+          --name cbx-converter
+          --onefile
+          --nowindow
+          --clean
+          --paths src:.venv/lib/python3.14/site-packages
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/cbx-converter
