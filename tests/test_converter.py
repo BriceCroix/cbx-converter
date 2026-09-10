@@ -64,6 +64,16 @@ def test_convert_cb7_to_pdf(tmp_path):
     assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".pdf"
 
+def test_convert_cbt_to_epub(tmp_path):
+    out = os.path.join(tmp_path, "out.epub")
+    res = cbx_convert(
+        get_asset("bobby_make_believe_sample_dir.cbt"),
+        out,
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
+    assert puremagic.magic_file(out)[0].extension == ".epub"
+
 
 def test_convert_cbz_downscale(tmp_path):
     max_size = 100
