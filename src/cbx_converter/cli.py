@@ -6,7 +6,7 @@ from natsort import natsorted
 from prettytable import PrettyTable
 from tqdm import tqdm
 
-from .converter import ConvertResult, cbx_convert
+from .converter import cbx_convert
 from .file_pattern_parser import compute_output_path
 
 
@@ -82,9 +82,9 @@ Examples :
             [
                 i_file,
                 o_file,
-                str(res),
-                f"{100.0 * os.path.getsize(o_file) / os.path.getsize(i_file) - 100:.1f} %"
-                if res != ConvertResult.Error
+                str(res.value) if res.is_ok() else f"Error : {res.error}",
+                f"{100.0 * os.path.getsize(o_file) / os.path.getsize(i_file) - 100:+.1f} %"
+                if res.is_ok()
                 else "NA",
             ]
         )
