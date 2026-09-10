@@ -53,6 +53,54 @@ def safe_extension(ext: str) -> str:
         case _:
             return ext
 
+def safe_cbx_extension(ext: str) -> str:
+    """Converts an archive extension to its comic book archive equivalent,
+    and removes leading dot if any.
+
+    Parameters
+    ----------
+    ext : str
+        The extension to check.
+
+    Returns
+    -------
+    str
+        Archive extension
+
+    Example
+    -------
+
+    >>> safe_cbx_extension(".JPEG")
+    'jpeg'
+    >>> safe_cbx_extension("rar")
+    'cbr'
+    >>> safe_cbx_extension(".7z")
+    'cb7'
+    >>> safe_cbx_extension(".zip")
+    'cbz'
+    >>> safe_cbx_extension(".tar")
+    'cbt'
+    >>> safe_cbx_extension("ace")
+    'cba'
+    """
+    ext = ext.lower().strip()
+    if ext[0] == ".":
+        ext = ext[1:]
+
+    match ext:
+        case "zip":
+            return "cbz"
+        case "rar":
+            return "cbr"
+        case "tar":
+            return "cbt"
+        case "ace":
+            return "cba"
+        case "7z":
+            return "cb7"
+        case _:
+            return ext
+
 
 class ConvertResult(Enum):
     Copied = 0
@@ -220,7 +268,9 @@ def cbx_convert(
 
         output_ext = safe_extension(os.path.splitext(output)[1])
 
-        if images_modified or output_ext != input_magic_extension:
+        if images_modified or safe_cbx_extension(output_ext) != safe_cbx_extension(
+            input_magic_extension
+        ):
             match output_ext:
                 case "pdf":
                     images_filenames_out_absolute = [

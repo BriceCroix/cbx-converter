@@ -6,7 +6,6 @@ from pathlib import Path
 
 import PIL
 import puremagic
-import pytest
 
 import tests as tests_package
 from cbx_converter.converter import ConvertResult, cbx_convert
@@ -188,9 +187,6 @@ def test_convert_cbz_identic(tmp_path):
     assert filecmp.cmp(input, out)
 
 
-@pytest.mark.skip(
-    reason="cbr magic extension is rar, then input/output extensions differ and file is not copied. TO FIX !"
-)
 def test_convert_cbr_identic_skip(tmp_path):
     input = get_asset("bobby_make_believe_sample.cbr")
     out = os.path.join(tmp_path, "out.cbr")
