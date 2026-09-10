@@ -18,19 +18,23 @@ def get_asset(filename: str) -> str:
 
 def test_convert_cb7_to_cbz(tmp_path):
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbx_convert(
+    res = cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".cbz"
 
 
 def test_convert_cb7_to_cbt(tmp_path):
     out = os.path.join(tmp_path, "out.cbt")
-    assert cbx_convert(
+    res = cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".cbt"
 
 
@@ -52,21 +56,25 @@ def test_convert_cb7_to_cba(tmp_path):
 
 def test_convert_cb7_to_pdf(tmp_path):
     out = os.path.join(tmp_path, "out.pdf")
-    assert cbx_convert(
+    res = cbx_convert(
         get_asset("bobby_make_believe_sample_dir.cb7"),
         out,
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".pdf"
 
 
 def test_convert_cbz_downscale(tmp_path):
     max_size = 100
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbx_convert(
+    res = cbx_convert(
         get_asset("bobby_make_believe_sample.cbz"),
         out,
         max_size=max_size,
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".cbz"
     extract_dir = os.path.join(tmp_path, "extracted")
     os.makedirs(extract_dir)
@@ -82,11 +90,13 @@ def test_convert_cbz_downscale(tmp_path):
 def test_convert_cbz_downscale_very_large(tmp_path):
     max_size = 1000000
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbx_convert(
+    res = cbx_convert(
         get_asset("bobby_make_believe_sample.cbz"),
         out,
         max_size=max_size,
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Copied
     assert puremagic.magic_file(out)[0].extension == ".cbz"
     extract_dir = os.path.join(tmp_path, "extracted")
     os.makedirs(extract_dir)
@@ -102,12 +112,14 @@ def test_convert_cbz_downscale_very_large(tmp_path):
 def test_convert_cbt_downgrade(tmp_path):
     asset = get_asset("bobby_make_believe_sample_dir.cbt")
     out = os.path.join(tmp_path, "out.cbt")
-    assert cbx_convert(
+    res = cbx_convert(
         asset,
         out,
         image_formats="jpeg",
         quality=1,  # Very poor
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".cbt"
     assert os.path.getsize(out) < os.path.getsize(asset)
 
@@ -115,11 +127,13 @@ def test_convert_cbt_downgrade(tmp_path):
 def test_convert_cbr_to_cbz_with_gif(tmp_path):
     asset = get_asset("bobby_make_believe_sample.cbr")
     out = os.path.join(tmp_path, "out.cbz")
-    assert cbx_convert(
+    res = cbx_convert(
         asset,
         out,
         image_formats=["gif", "png"],
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".cbz"
     extract_dir = os.path.join(tmp_path, "extracted")
     os.makedirs(extract_dir)
@@ -133,13 +147,15 @@ def test_convert_cbr_to_cbz_with_gif(tmp_path):
 def test_convert_cbz_to_cb7_do_all(tmp_path):
     asset = get_asset("bobby_make_believe_sample_dir.cbz")
     out = os.path.join(tmp_path, "out.cb7")
-    assert cbx_convert(
+    res = cbx_convert(
         asset,
         out,
         image_formats=["png", "webp"],
         quality=10,
         max_size=200,
-    ).is_ok()
+    )
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".cb7"
 
 
