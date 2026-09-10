@@ -288,7 +288,6 @@ def cbx_convert(
             return ConvertResult.Copied
 
 
-# This method was taken from https://github.com/g0ldyy/sushiscan-downloader.git
 def create_epub(images: list[str], output_path: str, title: str):
     """Creates epub file from given images
 
@@ -301,16 +300,18 @@ def create_epub(images: list[str], output_path: str, title: str):
     title : str
         The title of the epub
     """
-    if len(images) == 0:
-        return
     with zipfile.ZipFile(output_path, "w") as zf:
-        zf.writestr("mimetype", "application/epub+zip")
+        # The mimetype file MUST be uncompressed and MUST be the first file in the archive
+        zf.writestr(
+            "mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED
+        )
+
         zf.writestr(
             "META-INF/container.xml",
             """<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
-    <rootfile full-path="content.opf" media-type="application/oebps-package+xml"/>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>""",
         )
@@ -322,8 +323,15 @@ def create_epub(images: list[str], output_path: str, title: str):
             filename = os.path.basename(img)
             zf.write(img, f"OEBPS/images/{filename}")
             page_id = f"page_{i + 1}"
+
+            try:
+                mime_type = puremagic.from_file(img, mime=True)
+            except puremagic.PureError:
+                # Fallback if the magic number is unrecognized
+                mime_type = "image/jpeg"
+
             manifest.append(
-                f'<item id="{page_id}" href="images/{filename}" media-type="image/jpeg"/>'
+                f'<item id="{page_id}" href="images/{filename}" media-type="{mime_type}"/>'
             )
 
             html_content = f"""<?xml version="1.0" encoding="utf-8"?>
@@ -342,6 +350,8 @@ def create_epub(images: list[str], output_path: str, title: str):
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>{title}</dc:title>
+    <dc:language>en</dc:language>
+    <dc:identifier id="BookId">urn:uuid:12345</dc:identifier>
   </metadata>
   <manifest>
     {"".join(manifest)}
@@ -353,12 +363,18 @@ def create_epub(images: list[str], output_path: str, title: str):
 </package>"""
         zf.writestr("OEBPS/content.opf", content_opf)
 
+        # Provide a valid navPoint
         zf.writestr(
             "OEBPS/toc.ncx",
             f"""<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
   <head><meta name="dtb:uid" content="urn:uuid:12345"/></head>
   <docTitle><text>{title}</text></docTitle>
-  <navMap/>
+  <navMap>
+    <navPoint id="navPoint-1" playOrder="1">
+      <navLabel><text>Start</text></navLabel>
+      <content src="page_1.xhtml"/>
+    </navPoint>
+  </navMap>
 </ncx>""",
         )
