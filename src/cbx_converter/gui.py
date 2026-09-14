@@ -207,6 +207,7 @@ If an image format that is not in the list is encountered, the image will be con
 
     def start_conversion(self):
         self.btn_convert.setEnabled(False)
+        self.btn_convert.setText("Running")
         self.btn_select_dir.setEnabled(False)
         self.btn_select_file.setEnabled(False)
         self.reset_progress_bar()
@@ -246,6 +247,7 @@ If an image format that is not in the list is encountered, the image will be con
 
     def conversion_finished(self):
         self.btn_convert.setEnabled(True)
+        self.btn_convert.setText("Start Conversion")
         self.btn_select_file.setEnabled(True)
         self.btn_select_dir.setEnabled(True)
         QtWidgets.QMessageBox.information(
