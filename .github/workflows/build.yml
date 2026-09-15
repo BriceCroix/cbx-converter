@@ -15,10 +15,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_prefix: lin
+            os_short: lin
             pyinstaller_options:
           - os: windows-latest
-            artifact_prefix: win
+            os_short: win
             pyinstaller_options: --hide-console hide-late
 
     steps:
@@ -42,14 +42,14 @@ jobs:
       - name: Generate standalone app
         run: >
           uv run pyinstaller exe.py
-          --name cbx-converter-${{ env.VERSION }}
+          --name cbx-converter-${{ env.VERSION }}-${{ matrix.os_short }}
           --onefile
           --clean
           ${{ matrix.pyinstaller_options }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: cbx-converter-${{ env.VERSION }}-${{ matrix.artifact_prefix }}-${{ github.run_id }}
+          name: cbx-converter-${{ env.VERSION }}-${{ matrix.os_short }}-${{ github.run_id }}
           path: dist/cbx-converter-*
       - name: Upload artifacts to GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
