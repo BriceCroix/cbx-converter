@@ -129,6 +129,7 @@ If an image format that is not in the list is encountered, the image will be con
         self.btn_convert = QtWidgets.QPushButton("Start Conversion")
         self.btn_convert.setEnabled(False)
         self.progress_bar = QtWidgets.QProgressBar()
+        self.reset_progress_bar()
 
         # --- Layout setup ---
         layout = QtWidgets.QVBoxLayout(self)
@@ -176,6 +177,7 @@ If an image format that is not in the list is encountered, the image will be con
             self.lbl_input_path.setText(file_path)
             self.files = [Path(file_path)]
             self.update_table_preview()
+            self.reset_progress_bar()
 
     def select_directory(self):
         dir_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory")
@@ -184,6 +186,7 @@ If an image format that is not in the list is encountered, the image will be con
             # Find files matching the pattern as in cli.py
             self.files = natsorted(Path(dir_path).rglob("*.[cC][bB][zZrRaAtT7]"))
             self.update_table_preview()
+            self.reset_progress_bar()
 
     def update_table_preview(self):
         self.table.setRowCount(len(self.files))
@@ -207,8 +210,7 @@ If an image format that is not in the list is encountered, the image will be con
 
     def start_conversion(self):
         self.btn_convert.setEnabled(False)
-        self.progress_bar.setMaximum(len(self.files))
-        self.progress_bar.setValue(0)
+        self.reset_progress_bar()
 
         # Parse arguments mapped from CLI
         formats_text = self.le_format.text()
@@ -233,6 +235,11 @@ If an image format that is not in the list is encountered, the image will be con
         self.worker.row_updated.connect(self.update_table_row)
         self.worker.finished.connect(self.conversion_finished)
         self.worker.start()
+
+    def reset_progress_bar(self):
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(len(self.files) if len(self.files) != 0 else 1)
+        self.progress_bar.setValue(0)
 
     def update_table_row(self, row, status, size_change):
         self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(status))
