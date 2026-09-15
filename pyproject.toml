@@ -27,6 +27,9 @@ dev = [
 [project.scripts]
 cbx_converter = "cbx_converter.__main__:main"
 
+[project.optional-dependencies]
+gui = ["pyside6>=6.11.2"]
+
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
