@@ -36,7 +36,6 @@ jobs:
           uv run pyinstaller exe.py
           --name cbx-converter-$(uv run cbx_converter --version)
           --onefile
-          --nowindow
           --clean
           ${{ matrix.pyinstaller_options }}
       - name: Upload artifacts
