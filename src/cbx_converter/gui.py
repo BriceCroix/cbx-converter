@@ -14,7 +14,6 @@ class ConversionWorker(QtCore.QThread):
 
     progress = QtCore.Signal(int)
     row_updated = QtCore.Signal(int, str, str)  # row index, status, size change
-    finished = QtCore.Signal()
 
     def __init__(self, files, output_pattern, formats, quality, size, skip):
         super().__init__()
@@ -57,8 +56,6 @@ class ConversionWorker(QtCore.QThread):
 
             self.row_updated.emit(i, status, size_change)
             self.progress.emit(i + 1)
-
-        self.finished.emit()
 
 
 class MyWidget(QtWidgets.QWidget):
