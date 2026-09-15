@@ -1,9 +1,4 @@
-try:
-    from PySide6 import QtCore, QtWidgets
-
-    _has_pyside = True
-except ImportError():
-    _has_pyside = False
+from PySide6 import QtCore, QtWidgets
 
 
 class MyWidget(QtWidgets.QWidget):
