@@ -76,18 +76,41 @@ class MyWidget(QtWidgets.QWidget):
 
         # Options matching cli.py arguments
         self.le_output = QtWidgets.QLineEdit("%F.pdf")
+        self.le_output.setPlaceholderText("%F.pdf")
+        self.le_output.setToolTip("""The output file pattern. Extension must be provided.
+
+Supported matchers are :
+- `%f` : The file stem (`/tmp/dir/myfile.cbz` -> `myfile`)
+- `%F` : The file stem with path (`/tmp/dir/myfile.cbz` -> `/tmp/dir/myfile`)
+- `%e` : The file extension (`/tmp/dir/myfile.cbz` -> `cbz`)
+- `%p` : The file parent only (`/tmp/dir/myfile.cbz` -> `dir`)
+- `%P` : The file parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp/dir`)
+- `%Q` : The file parent's parent whole path (`/tmp/dir/myfile.cbz` -> `/tmp`)
+
+Examples :
+- `%F.pdf`
+- `%Q/%p-converted/%f.cbz`""")
         self.le_format = QtWidgets.QLineEdit("")
-        self.le_format.setPlaceholderText("e.g., jpg, png")
+        self.le_format.setPlaceholderText("jpg,png")
+        self.le_format.setToolTip(
+            """Comma-separated list of accepted image formats in the comic book archives (jpg, png, etc...).
+If an image format that is not in the list is encountered, the image will be converted to the first format in this list."""
+        )
 
         self.sb_quality = QtWidgets.QSpinBox()
         self.sb_quality.setRange(-1, 100)
         self.sb_quality.setSpecialValueText("Default")
         self.sb_quality.setValue(-1)
+        self.sb_quality.setToolTip(
+            "Integer between 0 (lowest) and 100 (highest) to downgrade the quality "
+            "of images (jpg default is 75)."
+        )
 
         self.sb_size = QtWidgets.QSpinBox()
         self.sb_size.setRange(-1, 99999)
         self.sb_size.setSpecialValueText("No limit")
         self.sb_size.setValue(-1)
+        self.sb_size.setToolTip("Maximum width and height of images.")
 
         self.cb_ignore = QtWidgets.QCheckBox(
             "Skip copying files to destination when nothing to do"
@@ -117,10 +140,23 @@ class MyWidget(QtWidgets.QWidget):
         layout.addLayout(input_layout)
 
         form_layout = QtWidgets.QFormLayout()
-        form_layout.addRow("Output Pattern:", self.le_output)
-        form_layout.addRow("Accepted Formats:", self.le_format)
-        form_layout.addRow("Quality (0-100):", self.sb_quality)
-        form_layout.addRow("Max Size:", self.sb_size)
+
+        label = QtWidgets.QLabel("Output Pattern:")
+        label.setToolTip(self.le_output.toolTip())
+        form_layout.addRow(label, self.le_output)
+
+        label = QtWidgets.QLabel("Image Formats:")
+        label.setToolTip(self.le_format.toolTip())
+        form_layout.addRow(label, self.le_format)
+
+        label = QtWidgets.QLabel("Quality (0-100):")
+        label.setToolTip(self.sb_quality.toolTip())
+        form_layout.addRow(label, self.sb_quality)
+
+        label = QtWidgets.QLabel("Max Size:")
+        label.setToolTip(self.sb_size.toolTip())
+        form_layout.addRow(label, self.sb_size)
+
         layout.addLayout(form_layout)
 
         layout.addWidget(self.cb_ignore)
