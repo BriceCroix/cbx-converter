@@ -7,8 +7,18 @@ on:
   pull_request:
     branches: [ "master" ]
 jobs:
-  lin-build-artifact:
-    runs-on: ubuntu-latest
+  build-executable:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_prefix: lin
+            pyinstaller_options:
+          - os: windows-latest
+            artifact_prefix: win
+            pyinstaller_options: --hide-console hide-late
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v7.0.1
@@ -28,35 +38,9 @@ jobs:
           --onefile
           --nowindow
           --clean
+          ${{ matrix.pyinstaller_options }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: cbx-converter-lin-${{ github.run_id }}-${{ github.sha }}
+          name: cbx-converter-${{ matrix.artifact_prefix }}-${{ github.run_id }}-${{ github.sha }}
           path: dist/cbx-converter-*
-  win-build-artifact:
-    runs-on: windows-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v7.0.1
-      - name: Install uv
-        # https://github.com/astral-sh/setup-uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          version: "0.12.7"
-      - name: Set up Python
-        run: uv python install
-      - name: Install the project
-        run: uv sync --locked --all-extras
-      - name: Generate standalone app
-        run: >
-          uv run pyinstaller exe.py
-          --name cbx-converter-$(uv run cbx_converter --version)
-          --onefile
-          --hide-console hide-late
-          --clean
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: cbx-converter-win-${{ github.run_id }}-${{ github.sha }}
-          path: dist/cbx-converter-*
-
