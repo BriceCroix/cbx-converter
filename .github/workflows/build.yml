@@ -25,4 +25,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
+          name: cbx-converter-${{ github.run_id }}-${{ github.sha }}
           path: dist/cbx-converter-*
