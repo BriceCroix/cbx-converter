@@ -6,13 +6,20 @@ from natsort import natsorted
 from prettytable import PrettyTable
 from tqdm import tqdm
 
+from . import __version__
 from .converter import ConvertResult, cbx_convert
 from .file_pattern_parser import compute_output_path
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="CBX converter CLI", formatter_class=argparse.RawTextHelpFormatter
+        description="CBX converter CLI",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s {version}".format(version=__version__),
     )
     parser.add_argument(
         "cbx",
