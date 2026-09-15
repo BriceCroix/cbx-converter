@@ -43,10 +43,6 @@ jobs:
       - name: Add this as dependency
         working-directory: ${{ runner.temp }}/test_project
         run: uv add "cbx_converter @ ${{ github.workspace }}"
-      - name: Add import
-        shell: bash
+      - name: Import this
         working-directory: ${{ runner.temp }}/test_project
-        run: sed -i '1s/^/import cbx_converter\n/' src/test_project/__init__.py
-      - name: Run test project
-        working-directory: ${{ runner.temp }}/test_project
-        run: uv run test_project
+        run: uv run python -c "import cbx_converter"
