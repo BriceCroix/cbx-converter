@@ -58,7 +58,7 @@ class ConversionWorker(QtCore.QThread):
             self.progress.emit(i + 1)
 
 
-class MyWidget(QtWidgets.QWidget):
+class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CBX Converter GUI")
@@ -251,7 +251,7 @@ If an image format that is not in the list is encountered, the image will be con
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    widget = MyWidget()
+    widget = MainWindow()
     widget.resize(900, 600)
     widget.show()
     sys.exit(app.exec())
