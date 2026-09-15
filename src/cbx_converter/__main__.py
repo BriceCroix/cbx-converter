@@ -6,15 +6,9 @@ from . import cli
 def main():
     if len(sys.argv) == 1:
         try:
-            from PySide6 import QtWidgets
+            from . import gui
 
-            from .gui import MyWidget
-
-            app = QtWidgets.QApplication([])
-            widget = MyWidget()
-            widget.resize(800, 600)
-            widget.show()
-            sys.exit(app.exec())
+            gui.main()
         except (ImportError, ModuleNotFoundError) as _:
             cli.main()
 
