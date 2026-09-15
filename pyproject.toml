@@ -38,6 +38,9 @@ addopts = [
     "--verbose",
     "--cov",
 ]
+testpaths = [
+    "tests",
+]
 
 [tool.coverage.run]
 source = ["src/cbx_converter"]
