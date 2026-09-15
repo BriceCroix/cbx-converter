@@ -18,11 +18,11 @@ jobs:
       - name: Generate standalone app
         run: >
           uv run pyinstaller exe.py
-          --name cbx-converter
+          --name cbx-converter-$(uv run dunamai from git)
           --onefile
           --nowindow
           --clean
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          path: dist/cbx-converter
+          path: dist/cbx-converter-*
