@@ -61,7 +61,7 @@ class ConversionWorker(QtCore.QThread):
 class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("CBX Converter GUI")
+        self.setWindowTitle("Comic Book Archive converter")
         self.files = []
 
         # --- UI Components ---
