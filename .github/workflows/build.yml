@@ -44,5 +44,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: cbx-converter-${{ matrix.artifact_prefix }}-${{ github.run_id }}-${{ env.VERSION }}
+          name: cbx-converter-${{ env.VERSION }}-${{ matrix.artifact_prefix }}-${{ github.run_id }}
           path: dist/cbx-converter-*
