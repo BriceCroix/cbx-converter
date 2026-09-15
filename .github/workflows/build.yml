@@ -52,7 +52,7 @@ jobs:
           uv run pyinstaller exe.py
           --name cbx-converter-$(uv run cbx_converter --version)
           --onefile
-          --nowindow
+          --hide-console hide-late
           --clean
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
