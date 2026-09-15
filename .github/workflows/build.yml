@@ -18,7 +18,7 @@ jobs:
       - name: Generate standalone app
         run: >
           uv run pyinstaller exe.py
-          --name cbx-converter-$(uv run dunamai from git)
+          --name cbx-converter-$(uv run cbx_converter --version)
           --onefile
           --nowindow
           --clean

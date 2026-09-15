@@ -16,11 +16,7 @@ def main():
         description="CBX converter CLI",
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s {version}".format(version=__version__),
-    )
+    parser.add_argument("--version", action="version", version=f"{__version__}")
     parser.add_argument(
         "cbx",
         help="Input cbz, cbr, cbt, cba, or cb7 file, or directory containing cbx files, that will be scanned recursively.",
