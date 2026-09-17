@@ -55,3 +55,6 @@ branch = true
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.uv.sources]
+py7zr = { git = "https://github.com/BriceCroix/py7zr.git", branch = "fix/android" }
