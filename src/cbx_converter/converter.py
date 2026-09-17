@@ -3,6 +3,7 @@ import shutil
 import tarfile
 import tempfile
 import zipfile
+from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
 from pathlib import Path
 
@@ -118,6 +119,87 @@ class ConvertResult(Enum):
                 return "Skipped"
 
 
+def process_single_image(
+    image_filename_in: str,
+    output_directory: str,
+    image_formats: list[str] | None = None,
+    quality: int | None = None,
+    max_size: int | None = None,
+) -> tuple[str, bool]:
+    """Process single image in the input archive
+
+    Parameters
+    ----------
+    image_filename_in : str
+        The relative image path.
+    output_directory : str
+        The directory where to write output image.
+    image_formats : list[str] | None (optional)
+        If provided, the file formats to be forced for on the image (jpg, png...).
+    quality : int | None (optional)
+        If provided, allows to lower the quality of the image (0 is worst, 100 is best)
+        Only supported for file types : avif, jpg, webp.
+    max_size : int | None (optional)
+        If provided, image will be resized with this value as its maximum width or height.
+
+    Returns
+    -------
+    tuple[str, bool]
+        The output path, and whether the image was actually modified (True), or copied (False).
+    """
+    image_modified = False
+
+    with PIL.Image.open(image_filename_in) as img:
+        # .copy() loads the image into memory and detaches it from the physical file
+        # This is because on windows PIL keeps a handle on the file
+        image = img.copy()
+
+    if max_size is not None:
+        size = max(image.size)
+        if size > max_size:
+            ratio = max_size / size
+            image = image.resize(
+                size=(
+                    int(image.width * ratio),
+                    int(image.height * ratio),
+                ),
+                resample=PIL.Image.Resampling.LANCZOS,
+            )
+            image_modified = True
+
+    image_file_ext_in = safe_extension(os.path.splitext(image_filename_in)[1])
+    image_file_ext_out = image_file_ext_in
+    if image_formats is not None and image_file_ext_in not in image_formats:
+        image_file_ext_out = image_formats[0]
+        image_modified = True
+
+    image_filename_out = (
+        os.path.splitext(os.path.basename(image_filename_in))[0]
+        + "."
+        + image_file_ext_out
+    )
+
+    # Only use quality argument if provided.
+    quality_dict = {}
+    if quality is not None:
+        image_modified = True
+        quality_dict = {"quality": quality}
+
+    image_filename_out_absolute = os.path.join(output_directory, image_filename_out)
+    os.makedirs(os.path.dirname(image_filename_out_absolute), exist_ok=True)
+    if image_modified:
+        if image_file_ext_out == "jpg":
+            image = image.convert("RGB")
+        image.save(
+            image_filename_out_absolute,
+            optimize=True,
+            **quality_dict,
+        )
+    else:
+        shutil.copyfile(image_filename_in, image_filename_out_absolute)
+    return image_filename_out, image_modified
+
+
 @safe
 def cbx_convert(
     input: str,
@@ -200,69 +282,23 @@ def cbx_convert(
 
         # If there is anything to do on the images themselves
         if quality is not None or max_size is not None or image_formats is not None:
-            for image_filename_in in tqdm(
-                images_filenames_in, desc="Processing", leave=False
-            ):
-                image_filename_in_absolute = os.path.join(
-                    input_tempdir, image_filename_in
-                )
-
-                image_modified = False
-
-                with PIL.Image.open(image_filename_in_absolute) as img:
-                    # .copy() loads the image into memory and detaches it from the physical file
-                    # This is because on windows PIL keeps a handle on the file
-                    image = img.copy()
-
-                if max_size is not None:
-                    size = max(image.size)
-                    if size > max_size:
-                        ratio = max_size / size
-                        image = image.resize(
-                            size=(
-                                int(image.width * ratio),
-                                int(image.height * ratio),
-                            ),
-                            resample=PIL.Image.Resampling.LANCZOS,
-                        )
-                        image_modified = True
-
-                image_file_ext_in = safe_extension(
-                    os.path.splitext(image_filename_in)[1]
-                )
-                image_file_ext_out = image_file_ext_in
-                if image_formats is not None and image_file_ext_in not in image_formats:
-                    image_file_ext_out = image_formats[0]
-                    image_modified = True
-
-                image_filename_out = (
-                    os.path.splitext(image_filename_in)[0] + "." + image_file_ext_out
-                )
-
-                # Only use quality argument if provided.
-                quality_dict = {}
-                if quality is not None:
-                    image_modified = True
-                    quality_dict = {"quality": quality}
-
-                image_filename_out_absolute = os.path.join(
-                    output_tempdir, image_filename_out
-                )
-                os.makedirs(os.path.dirname(image_filename_out_absolute), exist_ok=True)
-                if image_modified:
-                    if image_file_ext_out == "jpg":
-                        image = image.convert("RGB")
-                    image.save(
-                        image_filename_out_absolute,
-                        optimize=True,
-                        **quality_dict,
+            with ProcessPoolExecutor() as pool:
+                futures = [
+                    pool.submit(
+                        process_single_image,
+                        os.path.join(input_tempdir, image_filename_in),
+                        output_tempdir,
+                        image_formats,
+                        quality,
+                        max_size,
                     )
-                else:
-                    shutil.copyfile(
-                        image_filename_in_absolute, image_filename_out_absolute
-                    )
-                images_filenames_out.append(image_filename_out)
-                images_modified = images_modified or image_modified
+                    for image_filename_in in images_filenames_in
+                ]
+
+                for future in futures:
+                    image_filename_out, image_modified = future.result()
+                    images_filenames_out.append(image_filename_out)
+                    images_modified = images_modified or image_modified
         else:
             shutil.copytree(input_tempdir, output_tempdir, dirs_exist_ok=True)
             images_filenames_out = images_filenames_in
