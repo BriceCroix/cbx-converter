@@ -220,6 +220,7 @@ If an image format that is not in the list is encountered, the image will be con
         self.enableControl(False)
         self.btn_convert.setText("Running")
         self.reset_progress_bar()
+        self.progress_bar.setMaximum(0)
 
         # Parse arguments mapped from CLI
         formats_text = self.le_format.text()
@@ -240,10 +241,15 @@ If an image format that is not in the list is encountered, the image will be con
             skip=self.cb_ignore.isChecked(),
         )
 
-        self.worker.progress.connect(self.progress_bar.setValue)
+        self.worker.progress.connect(self.on_progress)
         self.worker.row_updated.connect(self.update_table_row)
         self.worker.finished.connect(self.conversion_finished)
         self.worker.start()
+
+    def on_progress(self, value):
+        if self.progress_bar.maximum() == 0:
+            self.progress_bar.setMaximum(len(self.files) if len(self.files) != 0 else 1)
+        self.progress_bar.setValue(value)
 
     def reset_progress_bar(self):
         self.progress_bar.setMinimum(0)
