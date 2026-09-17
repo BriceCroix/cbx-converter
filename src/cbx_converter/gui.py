@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from pathlib import Path
 
 from natsort import natsorted
@@ -168,6 +169,16 @@ If an image format that is not in the list is encountered, the image will be con
         self.le_output.textChanged.connect(self.update_table_preview)
         self.btn_convert.clicked.connect(self.start_conversion)
 
+    def enableControl(self, enabled: bool):
+        self.btn_select_dir.setEnabled(enabled)
+        self.btn_select_file.setEnabled(enabled)
+        self.le_output.setEnabled(enabled)
+        self.le_format.setEnabled(enabled)
+        self.sb_quality.setEnabled(enabled)
+        self.sb_size.setEnabled(enabled)
+        self.cb_ignore.setEnabled(enabled)
+        self.btn_convert.setEnabled(enabled and len(self.files) > 0)
+
     def select_file(self):
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select CBX File")
         if file_path:
@@ -175,6 +186,7 @@ If an image format that is not in the list is encountered, the image will be con
             self.files = [Path(file_path)]
             self.update_table_preview()
             self.reset_progress_bar()
+        self.btn_convert.setEnabled(len(self.files) > 0)
 
     def select_directory(self):
         dir_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory")
@@ -184,6 +196,7 @@ If an image format that is not in the list is encountered, the image will be con
             self.files = natsorted(Path(dir_path).rglob("*.[cC][bB][zZrRaAtT7]"))
             self.update_table_preview()
             self.reset_progress_bar()
+        self.btn_convert.setEnabled(len(self.files) > 0)
 
     def update_table_preview(self):
         self.table.setRowCount(len(self.files))
@@ -203,11 +216,13 @@ If an image format that is not in the list is encountered, the image will be con
             self.table.setItem(i, 2, QtWidgets.QTableWidgetItem("Pending"))
             self.table.setItem(i, 3, QtWidgets.QTableWidgetItem("-"))
 
-        self.btn_convert.setEnabled(len(self.files) > 0)
 
     def start_conversion(self):
-        self.btn_convert.setEnabled(False)
+        self.enableControl(False)
+        self.btn_convert.setText("Running")
         self.reset_progress_bar()
+        self.progress_bar.setMaximum(0)
+        self.start_time = time.time()
 
         # Parse arguments mapped from CLI
         formats_text = self.le_format.text()
@@ -228,10 +243,37 @@ If an image format that is not in the list is encountered, the image will be con
             skip=self.cb_ignore.isChecked(),
         )
 
-        self.worker.progress.connect(self.progress_bar.setValue)
+        self.worker.progress.connect(self.on_progress)
         self.worker.row_updated.connect(self.update_table_row)
         self.worker.finished.connect(self.conversion_finished)
         self.worker.start()
+
+    def on_progress(self, value):
+        files_count = len(self.files)
+        if self.progress_bar.maximum() == 0:
+            self.progress_bar.setMaximum(files_count if files_count != 0 else 1)
+        self.progress_bar.setValue(value)
+
+        if value > 0 and value < files_count:
+            elapsed_time = time.time() - self.start_time
+            time_per_file = elapsed_time / value
+            remaining_files = files_count - value
+            eta_seconds = int(time_per_file * remaining_files)
+
+            # Format seconds into MM:SS or HH:MM:SS
+            m, s = divmod(eta_seconds, 60)
+            h, m = divmod(m, 60)
+
+            if h > 0:
+                eta_str = f"{h:02d}:{m:02d}:{s:02d}"
+            else:
+                eta_str = f"{m:02d}:{s:02d}"
+
+            # Override the progress bar text to show percentage and ETA
+            self.progress_bar.setFormat(f"%p% - {eta_str} left")
+
+        elif value == files_count:
+            self.progress_bar.setFormat("%p%")
 
     def reset_progress_bar(self):
         self.progress_bar.setMinimum(0)
@@ -243,7 +285,8 @@ If an image format that is not in the list is encountered, the image will be con
         self.table.setItem(row, 3, QtWidgets.QTableWidgetItem(size_change))
 
     def conversion_finished(self):
-        self.btn_convert.setEnabled(True)
+        self.enableControl(True)
+        self.btn_convert.setText("Start Conversion")
         QtWidgets.QMessageBox.information(
             self, "Finished", "Conversion process completed."
         )
