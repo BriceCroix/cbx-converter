@@ -44,8 +44,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1c/57/fc72280334d2aa94238c5882052263bd7796c1fa924044353c30d058e0c3/backports_zstd-1.7.0-cp312-cp312-win32.whl", hash = "sha256:f026fe2e89b7ff01ba6ebec6abaff34c6063919151a32afb68714cf139e17c50", size = 292394, upload-time = "2026-08-15T17:25:57.469Z" },
     { url = "https://files.pythonhosted.org/packages/71/89/6cea747bdeef34cd12482b17e604b832fdb0962987132b99496f1a6c3f82/backports_zstd-1.7.0-cp312-cp312-win_amd64.whl", hash = "sha256:2ea62ba2f1a6e6c9e6dc108921f9ae881969ca72e073162fa488d0de3eb2713f", size = 329876, upload-time = "2026-08-15T17:25:58.798Z" },
     { url = "https://files.pythonhosted.org/packages/64/28/b4a17c07d5a50a45cb04592960d1593cdf3b3728968371f332aa3643b804/backports_zstd-1.7.0-cp312-cp312-win_arm64.whl", hash = "sha256:cefb983345c55ccaa20423a4eb96434730e6d640ffa2db9b60e5bedb0fbef94e", size = 292461, upload-time = "2026-08-15T17:25:59.928Z" },
-    { url = "https://files.pythonhosted.org/packages/6f/24/32b3358ae3a4df0ebad85ebbce721818c6d76a836119bee76089d103e951/backports_zstd-1.7.0-cp313-cp313-android_24_arm64_v8a.whl", hash = "sha256:a3fbcbf819bee2b06b8666b13742098d0f40663ee34e64a12bc360ec0f5e3d89", size = 400913, upload-time = "2026-08-15T17:26:01.089Z" },
-    { url = "https://files.pythonhosted.org/packages/af/f3/39ef7dd75eb1e699e25a19212737a73d3c030a0c9fd1d0ed1572b5f8e493/backports_zstd-1.7.0-cp313-cp313-android_24_x86_64.whl", hash = "sha256:efee02f18e04c2e9e6d694c5cf9b7457c4bda3ea96f48b1ee69769e06bb9d89f", size = 454915, upload-time = "2026-08-15T17:26:02.294Z" },
     { url = "https://files.pythonhosted.org/packages/76/e8/8209081e094aa98b2f28bac388619c85b1a44aed813d6b3c54d1da79d19a/backports_zstd-1.7.0-cp313-cp313-ios_13_0_arm64_iphoneos.whl", hash = "sha256:ecc95fa0e91d92951d74468e7789afdf91d9e702f40af2d0fcbf0ded4d0f650a", size = 357992, upload-time = "2026-08-15T17:26:03.552Z" },
     { url = "https://files.pythonhosted.org/packages/b3/65/64025302bae4ba924d613e404c6120bf194b5636786960ece274622a4a3e/backports_zstd-1.7.0-cp313-cp313-ios_13_0_arm64_iphonesimulator.whl", hash = "sha256:34154d82fc0246738159084d146401073f9ac9cfd755b66bb8853ca06037810c", size = 366686, upload-time = "2026-08-15T17:26:04.812Z" },
     { url = "https://files.pythonhosted.org/packages/4a/b9/c4d24d113d28b774662152c462d38d28109741d6d45c1aea7834371741dc/backports_zstd-1.7.0-cp313-cp313-ios_13_0_x86_64_iphonesimulator.whl", hash = "sha256:44b687b1c0be5cb279693d2682f91ff84c559d679b2ef2fbe501fe4b2db2c4bb", size = 447221, upload-time = "2026-08-15T17:26:05.979Z" },
@@ -136,7 +134,7 @@ dependencies = [
     { name = "natsort" },
     { name = "prettytable" },
     { name = "puremagic" },
-    { name = "py7zr" },
+    { name = "py7zr", marker = "sys_platform != 'android'" },
     { name = "rarfile" },
     { name = "safe-result" },
     { name = "tqdm" },
@@ -150,7 +148,7 @@ gui = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
-    { name = "pyinstaller" },
+    { name = "pyinstaller", marker = "sys_platform != 'android'" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -162,7 +160,7 @@ requires-dist = [
     { name = "natsort", specifier = ">=8.4.0" },
     { name = "prettytable", specifier = ">=3.18.0" },
     { name = "puremagic", specifier = ">=2.2.0" },
-    { name = "py7zr", git = "https://github.com/BriceCroix/py7zr.git?branch=fix%2Fandroid" },
+    { name = "py7zr", marker = "sys_platform != 'android'", specifier = ">=1.1.3" },
     { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.11.2" },
     { name = "rarfile", specifier = ">=4.5" },
     { name = "safe-result", specifier = ">=4.0.3" },
@@ -173,7 +171,7 @@ provides-extras = ["gui"]
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.15.4" },
-    { name = "pyinstaller", specifier = ">=6.22.3" },
+    { name = "pyinstaller", marker = "sys_platform != 'android'", specifier = ">=6.22.3" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
 ]
@@ -771,19 +769,23 @@ wheels = [
 
 [[package]]
 name = "py7zr"
-version = "0.1.dev2070"
-source = { git = "https://github.com/BriceCroix/py7zr.git?branch=fix%2Fandroid#66c2d2d4dc6f460f295616464cd4b0083e9b264f" }
+version = "1.1.3"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backports-zstd", marker = "python_full_version < '3.14'" },
     { name = "brotli", marker = "platform_python_implementation == 'CPython'" },
     { name = "brotlicffi", marker = "platform_python_implementation == 'PyPy'" },
     { name = "inflate64" },
     { name = "multivolumefile" },
-    { name = "psutil", marker = "sys_platform != 'android' and sys_platform != 'cygwin'" },
+    { name = "psutil", marker = "sys_platform != 'cygwin'" },
     { name = "pybcj" },
     { name = "pycryptodomex" },
     { name = "pyppmd" },
     { name = "texttable" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/3f/ac248f25f3901d3d6cf80ac99d5bac6fd1e5e6543c1812c79b02b6074c60/py7zr-1.1.3.tar.gz", hash = "sha256:8d51894abb38355bf14881088bb97f01fe4cb5b14ebe22f66d6297668c7e1a74", size = 71695, upload-time = "2026-06-19T09:28:29.339Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/40/dc7f804abd0ea167ea8d4d9b3f5455321aaf671d040fcef647e9e952e714/py7zr-1.1.3-py3-none-any.whl", hash = "sha256:17934a35089e026dec6c72ee275d9b841e646881ef822d618e805c3006661d9a", size = 72242, upload-time = "2026-06-19T09:28:27.512Z" },
 ]
 
 [[package]]

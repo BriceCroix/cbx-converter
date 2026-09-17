@@ -10,7 +10,13 @@ import acefile
 import img2pdf
 import PIL
 import puremagic
-import py7zr
+
+try:
+    import py7zr
+
+    HAS_PY7ZR = True
+except (ImportError, ModuleNotFoundError) as _:
+    HAS_PY7ZR = False
 import rarfile
 from natsort import natsorted
 from safe_result import safe
@@ -176,6 +182,10 @@ def cbx_convert(
                 with rarfile.RarFile(input, "r") as rf:
                     rf.extractall(path=input_tempdir)
             case "cb7" | "7z":
+                if not HAS_PY7ZR:
+                    raise RuntimeError(
+                        f'"{input_magic_extension}" is unsupported on this system'
+                    )
                 with py7zr.SevenZipFile(input, "r") as sf:
                     sf.extractall(path=input_tempdir)
             case "cbt" | "tar":
@@ -295,6 +305,10 @@ def cbx_convert(
                         f"{output_ext} files can only be read but not written"
                     )
                 case "cb7" | "7z":
+                    if not HAS_PY7ZR:
+                        raise RuntimeError(
+                            f'"{input_magic_extension}" is unsupported on this system'
+                        )
                     with py7zr.SevenZipFile(output, "w") as out:
                         for image_filename_out in tqdm(
                             images_filenames_out, desc="Writing", leave=False
