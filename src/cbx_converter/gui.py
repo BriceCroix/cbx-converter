@@ -227,7 +227,6 @@ If an image format that is not in the list is encountered, the image will be con
             self.table.setItem(i, 2, QtWidgets.QTableWidgetItem("Pending"))
             self.table.setItem(i, 3, QtWidgets.QTableWidgetItem("-"))
 
-
     def start_conversion(self):
         self.enableControl(False)
         self.reset_progress_bar()
@@ -319,6 +318,8 @@ If an image format that is not in the list is encountered, the image will be con
     def closeEvent(self, event):
         """Triggered when the user closes the application window."""
         if hasattr(self, "worker") and self.worker.isRunning():
+            # Prevent the message box from opening
+            self.worker.finished.disconnect()
             self.worker.cancel()
             self.worker.wait()
         event.accept()
