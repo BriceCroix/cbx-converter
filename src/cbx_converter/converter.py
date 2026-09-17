@@ -15,7 +15,6 @@ import py7zr
 import rarfile
 from natsort import natsorted
 from safe_result import safe
-from tqdm import tqdm
 
 
 def safe_extension(ext: str) -> str:
@@ -317,9 +316,7 @@ def cbx_convert(
                         out.write(img2pdf.convert(images_filenames_out_absolute))
                 case "cbz" | "zip":
                     with zipfile.ZipFile(output, "w") as out:
-                        for image_filename_out in tqdm(
-                            images_filenames_out, desc="Writing", leave=False
-                        ):
+                        for image_filename_out in images_filenames_out:
                             out.write(
                                 os.path.join(output_tempdir, image_filename_out),
                                 image_filename_out,
@@ -331,18 +328,14 @@ def cbx_convert(
                     )
                 case "cb7" | "7z":
                     with py7zr.SevenZipFile(output, "w") as out:
-                        for image_filename_out in tqdm(
-                            images_filenames_out, desc="Writing", leave=False
-                        ):
+                        for image_filename_out in images_filenames_out:
                             out.write(
                                 os.path.join(output_tempdir, image_filename_out),
                                 image_filename_out,
                             )
                 case "cbt" | "tar":
                     with tarfile.TarFile(output, "w") as out:
-                        for image_filename_out in tqdm(
-                            images_filenames_out, desc="Writing", leave=False
-                        ):
+                        for image_filename_out in images_filenames_out:
                             image_filename_out_absolute = os.path.join(
                                 output_tempdir, image_filename_out
                             )
