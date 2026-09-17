@@ -53,6 +53,7 @@ def safe_extension(ext: str) -> str:
         case _:
             return ext
 
+
 def safe_cbx_extension(ext: str) -> str:
     """Converts an archive extension to its comic book archive equivalent,
     and removes leading dot if any.
@@ -126,15 +127,15 @@ def cbx_convert(
     max_size: int | None = None,
     skip_when_nothing_to_do: bool = False,
 ) -> ConvertResult:
-    """Converts a cbz file into another file.
+    """Converts a comic book file into another file.
     If there is nothing to do, the file is simply copied to destination.
 
     Parameters
     ----------
     input : str
-        Path to a cbz file.
+        Path to a comic book file.
     output : str
-        Path to file to be created.
+        Path to file to be created (extension is used to determine type).
     image_formats : list[str] | str | None (optional)
         If provided, the file formats to be forced for each image in the cbz archive
         (jpg, png...).
@@ -318,6 +319,16 @@ def cbx_convert(
                                     ),
                                     img,
                                 )
+                case "epub":
+                    images_filenames_out_absolute = [
+                        os.path.join(output_tempdir, image_filename_out)
+                        for image_filename_out in images_filenames_out
+                    ]
+                    create_epub(
+                        images_filenames_out_absolute,
+                        output,
+                        os.path.splitext(os.path.basename(output))[0],
+                    )
                 case _:
                     raise RuntimeError(f'Unsupported output format "{output_ext}"')
             return ConvertResult.Converted
@@ -326,3 +337,100 @@ def cbx_convert(
                 return ConvertResult.Skipped
             shutil.copyfile(input, output)
             return ConvertResult.Copied
+
+
+def create_epub(images: list[str], output_path: str, title: str):
+    """Creates epub file from given images"""
+
+    # Enable overall compression, otherwise the EPUB will be massive.
+    # (store the mimetype uncompressed though).
+    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        # Prevent extra ZIP header fields (mimeinfo must start at byte 0x26)
+        mime_info = zipfile.ZipInfo("mimetype")
+        mime_info.compress_type = zipfile.ZIP_STORED
+        mime_info.create_system = (
+            0  # Forces standard ZIP behavior, preventing timestamp offsets
+        )
+        zf.writestr(mime_info, b"application/epub+zip")
+
+        zf.writestr(
+            "META-INF/container.xml",
+            """<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>""",
+        )
+
+        manifest = []
+        spine = []
+
+        for i, img in enumerate(images):
+            # Rename internally to avoid spaces, special chars, or duplicate filenames
+            ext = os.path.splitext(img)[1].lower()
+            safe_filename = f"image_{i + 1}{ext}"
+
+            zf.write(img, f"OEBPS/images/{safe_filename}")
+
+            page_id = f"page_{i + 1}"
+            xhtml_id = f"xhtml_{i + 1}"
+
+            try:
+                mime_type = puremagic.from_file(img, mime=True)
+            except puremagic.PureError:
+                mime_type = "image/jpeg"
+
+            manifest.append(
+                f'<item id="{page_id}" href="images/{safe_filename}" media-type="{mime_type}"/>'
+            )
+
+            html_content = f"""<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>Page {i + 1}</title></head>
+<body><img src="images/{safe_filename}" alt="Page {i + 1}" style="max-width:100%;"/></body>
+</html>"""
+            zf.writestr(f"OEBPS/page_{i + 1}.xhtml", html_content)
+
+            manifest.append(
+                f'<item id="{xhtml_id}" href="page_{i + 1}.xhtml" media-type="application/xhtml+xml"/>'
+            )
+            spine.append(f'<itemref idref="{xhtml_id}"/>')
+
+        content_opf = f"""<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>{title}</dc:title>
+    <dc:language>en</dc:language>
+    <dc:identifier id="BookId">urn:uuid:12345</dc:identifier>
+  </metadata>
+  <manifest>
+    {"".join(manifest)}
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+  </manifest>
+  <spine toc="ncx">
+    {"".join(spine)}
+  </spine>
+</package>"""
+        zf.writestr("OEBPS/content.opf", content_opf)
+
+        # Dynamically generate navigation points for all pages
+        nav_points = []
+        for i in range(len(images)):
+            nav_points.append(f"""    <navPoint id="navPoint-{i + 1}" playOrder="{i + 1}">
+      <navLabel><text>Page {i + 1}</text></navLabel>
+      <content src="page_{i + 1}.xhtml"/>
+    </navPoint>""")
+
+        # Provide a valid navMap with all pages included
+        zf.writestr(
+            "OEBPS/toc.ncx",
+            f"""<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head><meta name="dtb:uid" content="urn:uuid:12345"/></head>
+  <docTitle><text>{title}</text></docTitle>
+  <navMap>
+{"\n".join(nav_points)}
+  </navMap>
+</ncx>""",
+        )
