@@ -6,6 +6,7 @@ from pathlib import Path
 
 import PIL
 import puremagic
+import pytest
 
 import tests as tests_package
 from cbx_converter.converter import ConvertResult, cbx_convert
@@ -63,6 +64,8 @@ def test_convert_cb7_to_pdf(tmp_path):
     assert res.value == ConvertResult.Converted
     assert puremagic.magic_file(out)[0].extension == ".pdf"
 
+
+@pytest.mark.skip(reason="puremagic currently flags epub as zip (which it is)")
 def test_convert_cbt_to_epub(tmp_path):
     out = os.path.join(tmp_path, "out.epub")
     res = cbx_convert(
