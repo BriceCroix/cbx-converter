@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from pathlib import Path
 
 from natsort import natsorted
@@ -221,6 +222,7 @@ If an image format that is not in the list is encountered, the image will be con
         self.btn_convert.setText("Running")
         self.reset_progress_bar()
         self.progress_bar.setMaximum(0)
+        self.start_time = time.time()
 
         # Parse arguments mapped from CLI
         formats_text = self.le_format.text()
@@ -247,9 +249,31 @@ If an image format that is not in the list is encountered, the image will be con
         self.worker.start()
 
     def on_progress(self, value):
+        files_count = len(self.files)
         if self.progress_bar.maximum() == 0:
-            self.progress_bar.setMaximum(len(self.files) if len(self.files) != 0 else 1)
+            self.progress_bar.setMaximum(files_count if files_count != 0 else 1)
         self.progress_bar.setValue(value)
+
+        if value > 0 and value < files_count:
+            elapsed_time = time.time() - self.start_time
+            time_per_file = elapsed_time / value
+            remaining_files = files_count - value
+            eta_seconds = int(time_per_file * remaining_files)
+
+            # Format seconds into MM:SS or HH:MM:SS
+            m, s = divmod(eta_seconds, 60)
+            h, m = divmod(m, 60)
+
+            if h > 0:
+                eta_str = f"{h:02d}:{m:02d}:{s:02d}"
+            else:
+                eta_str = f"{m:02d}:{s:02d}"
+
+            # Override the progress bar text to show percentage and ETA
+            self.progress_bar.setFormat(f"%p% - {eta_str} left")
+
+        elif value == files_count:
+            self.progress_bar.setFormat("%p%")
 
     def reset_progress_bar(self):
         self.progress_bar.setMinimum(0)
