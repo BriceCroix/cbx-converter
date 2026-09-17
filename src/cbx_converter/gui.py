@@ -24,9 +24,15 @@ class ConversionWorker(QtCore.QThread):
         self.quality = quality
         self.size = size
         self.skip = skip
+        self._is_cancelled = False
+
+    def cancel(self):
+        self._is_cancelled = True
 
     def run(self):
         for i, i_file in enumerate(self.files):
+            if self._is_cancelled:
+                break
             o_file = compute_output_path(i_file, self.output_pattern)
 
             try:
@@ -167,7 +173,13 @@ If an image format that is not in the list is encountered, the image will be con
         self.btn_select_file.clicked.connect(self.select_file)
         self.btn_select_dir.clicked.connect(self.select_directory)
         self.le_output.textChanged.connect(self.update_table_preview)
-        self.btn_convert.clicked.connect(self.start_conversion)
+        self.btn_convert.clicked.connect(self.toggle_conversion)
+
+    def toggle_conversion(self):
+        if self.btn_convert.text() == "Start Conversion":
+            self.start_conversion()
+        else:
+            self.cancel_conversion()
 
     def enableControl(self, enabled: bool):
         self.btn_select_dir.setEnabled(enabled)
@@ -177,7 +189,6 @@ If an image format that is not in the list is encountered, the image will be con
         self.sb_quality.setEnabled(enabled)
         self.sb_size.setEnabled(enabled)
         self.cb_ignore.setEnabled(enabled)
-        self.btn_convert.setEnabled(enabled and len(self.files) > 0)
 
     def select_file(self):
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select CBX File")
@@ -219,9 +230,9 @@ If an image format that is not in the list is encountered, the image will be con
 
     def start_conversion(self):
         self.enableControl(False)
-        self.btn_convert.setText("Running")
         self.reset_progress_bar()
         self.progress_bar.setMaximum(0)
+        self.btn_convert.setText("Cancel")
         self.start_time = time.time()
 
         # Parse arguments mapped from CLI
@@ -247,6 +258,12 @@ If an image format that is not in the list is encountered, the image will be con
         self.worker.row_updated.connect(self.update_table_row)
         self.worker.finished.connect(self.conversion_finished)
         self.worker.start()
+
+    def cancel_conversion(self):
+        if hasattr(self, "worker") and self.worker.isRunning():
+            self.worker.cancel()
+            self.btn_convert.setText("Cancelling...")
+            self.btn_convert.setEnabled(False)  # Prevent clicking while stopping
 
     def on_progress(self, value):
         files_count = len(self.files)
@@ -286,10 +303,25 @@ If an image format that is not in the list is encountered, the image will be con
 
     def conversion_finished(self):
         self.enableControl(True)
+        self.btn_convert.setEnabled(len(self.files) > 0)
         self.btn_convert.setText("Start Conversion")
-        QtWidgets.QMessageBox.information(
-            self, "Finished", "Conversion process completed."
-        )
+
+        if self.worker._is_cancelled:
+            self.progress_bar.setFormat("%p% - Cancelled")
+            QtWidgets.QMessageBox.information(
+                self, "Cancelled", "Conversion process was cancelled."
+            )
+        else:
+            QtWidgets.QMessageBox.information(
+                self, "Finished", "Conversion process completed."
+            )
+
+    def closeEvent(self, event):
+        """Triggered when the user closes the application window."""
+        if hasattr(self, "worker") and self.worker.isRunning():
+            self.worker.cancel()
+            self.worker.wait()
+        event.accept()
 
 
 def main():
