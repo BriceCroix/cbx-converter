@@ -234,8 +234,6 @@ def cbx_convert(
     ConvertResult
         Operation performed on file.
     """
-    os.makedirs(os.path.dirname(output), exist_ok=True)
-
     if image_formats is not None:
         if isinstance(image_formats, str):
             image_formats = [image_formats]
@@ -308,6 +306,7 @@ def cbx_convert(
         if images_modified or safe_cbx_extension(output_ext) != safe_cbx_extension(
             input_magic_extension
         ):
+            os.makedirs(os.path.dirname(output), exist_ok=True)
             match output_ext:
                 case "pdf":
                     images_filenames_out_absolute = [
@@ -371,6 +370,7 @@ def cbx_convert(
         else:
             if skip_when_nothing_to_do:
                 return ConvertResult.Skipped
+            os.makedirs(os.path.dirname(output), exist_ok=True)
             shutil.copyfile(input, output)
             return ConvertResult.Copied
 
