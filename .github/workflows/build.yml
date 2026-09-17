@@ -59,3 +59,4 @@ jobs:
           file: dist/cbx-converter-*
           file_glob: true
           overwrite: false
+          body: ""
