@@ -168,6 +168,16 @@ If an image format that is not in the list is encountered, the image will be con
         self.le_output.textChanged.connect(self.update_table_preview)
         self.btn_convert.clicked.connect(self.start_conversion)
 
+    def enableControl(self, enabled: bool):
+        self.btn_select_dir.setEnabled(enabled)
+        self.btn_select_file.setEnabled(enabled)
+        self.le_output.setEnabled(enabled)
+        self.le_format.setEnabled(enabled)
+        self.sb_quality.setEnabled(enabled)
+        self.sb_size.setEnabled(enabled)
+        self.cb_ignore.setEnabled(enabled)
+        self.btn_convert.setEnabled(enabled and len(self.files) > 0)
+
     def select_file(self):
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select CBX File")
         if file_path:
@@ -175,6 +185,7 @@ If an image format that is not in the list is encountered, the image will be con
             self.files = [Path(file_path)]
             self.update_table_preview()
             self.reset_progress_bar()
+        self.btn_convert.setEnabled(len(self.files) > 0)
 
     def select_directory(self):
         dir_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory")
@@ -184,6 +195,7 @@ If an image format that is not in the list is encountered, the image will be con
             self.files = natsorted(Path(dir_path).rglob("*.[cC][bB][zZrRaAtT7]"))
             self.update_table_preview()
             self.reset_progress_bar()
+        self.btn_convert.setEnabled(len(self.files) > 0)
 
     def update_table_preview(self):
         self.table.setRowCount(len(self.files))
@@ -203,13 +215,10 @@ If an image format that is not in the list is encountered, the image will be con
             self.table.setItem(i, 2, QtWidgets.QTableWidgetItem("Pending"))
             self.table.setItem(i, 3, QtWidgets.QTableWidgetItem("-"))
 
-        self.btn_convert.setEnabled(len(self.files) > 0)
 
     def start_conversion(self):
-        self.btn_convert.setEnabled(False)
+        self.enableControl(False)
         self.btn_convert.setText("Running")
-        self.btn_select_dir.setEnabled(False)
-        self.btn_select_file.setEnabled(False)
         self.reset_progress_bar()
 
         # Parse arguments mapped from CLI
@@ -246,10 +255,8 @@ If an image format that is not in the list is encountered, the image will be con
         self.table.setItem(row, 3, QtWidgets.QTableWidgetItem(size_change))
 
     def conversion_finished(self):
-        self.btn_convert.setEnabled(True)
+        self.enableControl(True)
         self.btn_convert.setText("Start Conversion")
-        self.btn_select_file.setEnabled(True)
-        self.btn_select_dir.setEnabled(True)
         QtWidgets.QMessageBox.information(
             self, "Finished", "Conversion process completed."
         )
