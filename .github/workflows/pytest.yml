@@ -25,3 +25,24 @@ jobs:
         run: uv sync --locked --all-extras --dev
       - name: run pytest
         run: uv run pytest
+  use-as-dependency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v7.0.1
+      - name: Install uv
+        # https://github.com/astral-sh/setup-uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.12.7"
+      - name: Set up Python
+        run: uv python install
+      - name: Create new project
+        working-directory: ${{ runner.temp }}
+        run: uv init test_project
+      - name: Add this as dependency
+        working-directory: ${{ runner.temp }}/test_project
+        run: uv add "cbx_converter @ ${{ github.workspace }}"
+      - name: Import this
+        working-directory: ${{ runner.temp }}/test_project
+        run: uv run python -c "import cbx_converter"
