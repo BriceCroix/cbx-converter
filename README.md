@@ -1,7 +1,7 @@
 # CBX converter
 
 Simple module/executable to convert Comic Book Archive files (`.cbz`/`.cbr`/`.cbt`/`.cba`/`.cb7`)
-to pdf or to different archive types.
+to pdf, epub, or to different archive types.
 
 Can also be used to lower the size of files (by down-scaling and/or degrading quality) and/or to
 convert images in cbx file to other format (for instance if your reader does not support cbx
@@ -22,6 +22,7 @@ A GUI is available when no argument is provided in the CLI.
   - `cbt`
   - `cb7`
   - `pdf` (with no additional size than the contained images)
+  - `epub`
 - Can convert internal images from and to any type supported by [`pillow`](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html)
 - Can compress/downscale internal images to gain some space (loss of quality)
 
