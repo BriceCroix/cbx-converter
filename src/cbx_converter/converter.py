@@ -127,15 +127,15 @@ def cbx_convert(
     max_size: int | None = None,
     skip_when_nothing_to_do: bool = False,
 ) -> ConvertResult:
-    """Converts a cbz file into another file.
+    """Converts a comic book file into another file.
     If there is nothing to do, the file is simply copied to destination.
 
     Parameters
     ----------
     input : str
-        Path to a cbz file.
+        Path to a comic book file.
     output : str
-        Path to file to be created.
+        Path to file to be created (extension is used to determine type).
     image_formats : list[str] | str | None (optional)
         If provided, the file formats to be forced for each image in the cbz archive
         (jpg, png...).

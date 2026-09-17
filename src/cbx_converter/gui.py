@@ -83,6 +83,9 @@ class MainWindow(QtWidgets.QWidget):
         self.le_output.setPlaceholderText("%F.pdf")
         self.le_output.setToolTip("""The output file pattern. Extension must be provided.
 
+Output extension can be `cbz`, `cbt`, `cb7`, `pdf`, or `epub`.
+Use matcher `%e` to preserve extension.
+
 Supported matchers are :
 - `%f` : The file stem (`/tmp/dir/myfile.cbz` -> `myfile`)
 - `%F` : The file stem with path (`/tmp/dir/myfile.cbz` -> `/tmp/dir/myfile`)
