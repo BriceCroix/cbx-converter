@@ -306,6 +306,16 @@ def cbx_convert(
             input_magic_extension
         ):
             os.makedirs(os.path.dirname(output), exist_ok=True)
+            # Freeze disk timestamps for reproducible archive builds
+            fixed_timestamp = 315532800.0  # 1980-01-01 00:00:00
+            for image_filename_out in images_filenames_out:
+                image_filename_out_absolute = os.path.join(
+                    output_tempdir, image_filename_out
+                )
+                os.utime(
+                    image_filename_out_absolute, (fixed_timestamp, fixed_timestamp)
+                )
+
             match output_ext:
                 case "pdf":
                     images_filenames_out_absolute = [
