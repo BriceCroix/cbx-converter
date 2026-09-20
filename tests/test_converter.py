@@ -196,3 +196,36 @@ def test_convert_identic_skip(tmp_path, in_file):
     assert res.is_ok()
     assert res.value == ConvertResult.Skipped
     assert not Path(out).exists()
+
+
+@pytest.mark.parametrize(
+    "in_file",
+    [
+        "_dir.cb7",
+        "_dir.cbt",
+        "_dir.cbz",
+        ".cb7",
+        ".cbr",
+        ".cbt",
+        ".cbz",
+    ],
+)
+@pytest.mark.parametrize(
+    "out_fmt",
+    [".cbz", ".cbt", ".cb7", ".pdf", ".epub"],
+)
+def test_convert_reproducible(tmp_path, in_file, out_fmt):
+
+    input = get_asset(f"bobby_make_believe_sample{in_file}")
+
+    out1 = os.path.join(tmp_path, f"out_1{out_fmt}")
+    res = cbx_convert(input, out1, image_formats="webp", quality=10, max_size=100)
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
+
+    out2 = os.path.join(tmp_path, f"out_2{out_fmt}")
+    res = cbx_convert(input, out2, image_formats="webp", quality=10, max_size=100)
+    assert res.is_ok()
+    assert res.value == ConvertResult.Converted
+
+    assert filecmp.cmp(out1, out2)
