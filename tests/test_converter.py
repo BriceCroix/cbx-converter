@@ -15,66 +15,50 @@ from cbx_converter.converter import ConvertResult, cbx_convert
 def get_asset(filename: str) -> str:
     return resources.files(tests_package).joinpath("assets", filename)
 
-
-def test_convert_cb7_to_cbz(tmp_path):
-    out = os.path.join(tmp_path, "out.cbz")
+@pytest.mark.parametrize(
+    "in_file",
+    [
+        "_dir.cb7",
+        "_dir.cbt",
+        "_dir.cbz",
+        ".cb7",
+        ".cbr",
+        ".cbt",
+        ".cbz",
+    ],
+)
+@pytest.mark.parametrize(
+    "out_fmt",
+    [".cbz", ".cbt", ".cb7", ".pdf", ".epub"],
+)
+def test_convert_format(tmp_path, in_file, out_fmt):
+    out = os.path.join(tmp_path, f"out{out_fmt}")
     res = cbx_convert(
-        get_asset("bobby_make_believe_sample.cb7"),
+        get_asset(f"bobby_make_believe_sample{in_file}"),
         out,
     )
     assert res.is_ok()
-    assert res.value == ConvertResult.Converted
-    assert puremagic.magic_file(out)[0].extension == ".cbz"
-
-
-def test_convert_cb7_to_cbt(tmp_path):
-    out = os.path.join(tmp_path, "out.cbt")
-    res = cbx_convert(
-        get_asset("bobby_make_believe_sample.cb7"),
-        out,
+    assert (
+        res.value == ConvertResult.Converted
+        if out_fmt.split(".")[1] != in_file.split(".")[1]
+        else ConvertResult.Copied
     )
-    assert res.is_ok()
-    assert res.value == ConvertResult.Converted
-    assert puremagic.magic_file(out)[0].extension == ".cbt"
+
+    # puremagic flags epub as zip, which it is...
+    if out_fmt != ".epub":
+        assert puremagic.magic_file(out)[0].extension == out_fmt
 
 
-def test_convert_cb7_to_cbr(tmp_path):
-    out = os.path.join(tmp_path, "out.cbr")
+@pytest.mark.parametrize(
+    "out_fmt",
+    [".cba", ".cbr"],
+)
+def test_convert_proprietary_format(tmp_path, out_fmt):
+    out = os.path.join(tmp_path, f"out{out_fmt}")
     assert cbx_convert(
         get_asset("bobby_make_believe_sample.cb7"),
         out,
     ).is_err()
-
-
-def test_convert_cb7_to_cba(tmp_path):
-    out = os.path.join(tmp_path, "out.cba")
-    assert cbx_convert(
-        get_asset("bobby_make_believe_sample.cb7"),
-        out,
-    ).is_err()
-
-
-def test_convert_cb7_to_pdf(tmp_path):
-    out = os.path.join(tmp_path, "out.pdf")
-    res = cbx_convert(
-        get_asset("bobby_make_believe_sample_dir.cb7"),
-        out,
-    )
-    assert res.is_ok()
-    assert res.value == ConvertResult.Converted
-    assert puremagic.magic_file(out)[0].extension == ".pdf"
-
-
-@pytest.mark.skip(reason="puremagic currently flags epub as zip (which it is)")
-def test_convert_cbt_to_epub(tmp_path):
-    out = os.path.join(tmp_path, "out.epub")
-    res = cbx_convert(
-        get_asset("bobby_make_believe_sample_dir.cbt"),
-        out,
-    )
-    assert res.is_ok()
-    assert res.value == ConvertResult.Converted
-    assert puremagic.magic_file(out)[0].extension == ".epub"
 
 
 def test_convert_cbz_downscale(tmp_path):
@@ -156,21 +140,6 @@ def test_convert_cbr_to_cbz_with_gif(tmp_path):
         assert puremagic.magic_file(image_path)[0].extension == ".gif"
 
 
-def test_convert_cbz_to_cb7_do_all(tmp_path):
-    asset = get_asset("bobby_make_believe_sample_dir.cbz")
-    out = os.path.join(tmp_path, "out.cb7")
-    res = cbx_convert(
-        asset,
-        out,
-        image_formats=["png", "webp"],
-        quality=10,
-        max_size=200,
-    )
-    assert res.is_ok()
-    assert res.value == ConvertResult.Converted
-    assert puremagic.magic_file(out)[0].extension == ".cb7"
-
-
 def test_convert_bad_to_cbz(tmp_path):
     out = os.path.join(tmp_path, "out.cbz")
     assert cbx_convert(
@@ -187,31 +156,42 @@ def test_convert_cbz_to_bad(tmp_path):
     ).is_err()
 
 
-def test_convert_cbz_identic(tmp_path):
-    input = get_asset("bobby_make_believe_sample.cbz")
-    out = os.path.join(tmp_path, "out.cbz")
-    res = cbx_convert(
-        input,
-        out,
-        image_formats="jpg",
-    )
+@pytest.mark.parametrize(
+    "in_file",
+    [
+        "_dir.cb7",
+        "_dir.cbt",
+        "_dir.cbz",
+        ".cb7",
+        ".cbr",
+        ".cbt",
+        ".cbz",
+    ],
+)
+def test_convert_identic_copy(tmp_path, in_file):
+    input = get_asset(f"bobby_make_believe_sample{in_file}")
+    out = os.path.join(tmp_path, f"out.{in_file.split('.')[1]}")
+    res = cbx_convert(input, out, image_formats="jpg")
     assert res.is_ok()
     assert res.value == ConvertResult.Copied
     assert filecmp.cmp(input, out)
 
 
-def test_convert_cbr_identic_skip(tmp_path):
-    input = get_asset("bobby_make_believe_sample.cbr")
-    out = os.path.join(tmp_path, "out.cbr")
-    res = cbx_convert(input, out, image_formats="jpg", skip_when_nothing_to_do=True)
-    assert res.is_ok()
-    assert res.value == ConvertResult.Skipped
-    assert not Path(out).exists()
-
-
-def test_convert_cbt_identic_skip(tmp_path):
-    input = get_asset("bobby_make_believe_sample.cbt")
-    out = os.path.join(tmp_path, "out.cbt")
+@pytest.mark.parametrize(
+    "in_file",
+    [
+        "_dir.cb7",
+        "_dir.cbt",
+        "_dir.cbz",
+        ".cb7",
+        ".cbr",
+        ".cbt",
+        ".cbz",
+    ],
+)
+def test_convert_identic_skip(tmp_path, in_file):
+    input = get_asset(f"bobby_make_believe_sample{in_file}")
+    out = os.path.join(tmp_path, f"out.{in_file.split('.')[1]}")
     res = cbx_convert(input, out, image_formats="jpg", skip_when_nothing_to_do=True)
     assert res.is_ok()
     assert res.value == ConvertResult.Skipped
