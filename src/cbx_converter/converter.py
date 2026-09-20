@@ -323,7 +323,13 @@ def cbx_convert(
                         for image_filename_out in images_filenames_out
                     ]
                     with open(output, "wb") as out:
-                        out.write(img2pdf.convert(images_filenames_out_absolute))
+                        out.write(
+                            img2pdf.convert(
+                                images_filenames_out_absolute,
+                                nodate=True,
+                                engine=img2pdf.Engine.internal,
+                            )
+                        )
                 case "cbz" | "zip":
                     with zipfile.ZipFile(output, "w") as out:
                         for image_filename_out in images_filenames_out:
