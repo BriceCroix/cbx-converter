@@ -385,6 +385,7 @@ def create_epub(images: list[str], output_path: str, title: str):
     def write_reproducible_str(zf: zipfile.ZipFile, arcname: str, data: str):
         zinfo = zipfile.ZipInfo(arcname, (1980, 1, 1, 0, 0, 0))
         zinfo.compress_type = zipfile.ZIP_DEFLATED
+        zinfo.create_system = 0
         zf.writestr(zinfo, data)
 
     # Enable overall compression, otherwise the EPUB will be massive.
