@@ -218,12 +218,13 @@ def test_convert_reproducible(tmp_path, in_file, out_fmt):
 
     input = get_asset(f"bobby_make_believe_sample{in_file}")
 
-    out1 = os.path.join(tmp_path, f"out_1{out_fmt}")
+    # These files must have the same filename as it is set as title in epubs
+    out1 = os.path.join(tmp_path, "first", f"out{out_fmt}")
     res = cbx_convert(input, out1, image_formats="webp", quality=10, max_size=100)
     assert res.is_ok()
     assert res.value == ConvertResult.Converted
 
-    out2 = os.path.join(tmp_path, f"out_2{out_fmt}")
+    out2 = os.path.join(tmp_path, "second", f"out{out_fmt}")
     res = cbx_convert(input, out2, image_formats="webp", quality=10, max_size=100)
     assert res.is_ok()
     assert res.value == ConvertResult.Converted
