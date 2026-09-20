@@ -381,18 +381,25 @@ def cbx_convert(
 def create_epub(images: list[str], output_path: str, title: str):
     """Creates epub file from given images"""
 
+    # Helper function for reproducible zip writes
+    def write_reproducible_str(zf: zipfile.ZipFile, arcname: str, data: str):
+        zinfo = zipfile.ZipInfo(arcname, (1980, 1, 1, 0, 0, 0))
+        zinfo.compress_type = zipfile.ZIP_DEFLATED
+        zf.writestr(zinfo, data)
+
     # Enable overall compression, otherwise the EPUB will be massive.
     # (store the mimetype uncompressed though).
     with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         # Prevent extra ZIP header fields (mimeinfo must start at byte 0x26)
-        mime_info = zipfile.ZipInfo("mimetype")
+        mime_info = zipfile.ZipInfo("mimetype", (1980, 1, 1, 0, 0, 0))
         mime_info.compress_type = zipfile.ZIP_STORED
         mime_info.create_system = (
             0  # Forces standard ZIP behavior, preventing timestamp offsets
         )
         zf.writestr(mime_info, b"application/epub+zip")
 
-        zf.writestr(
+        write_reproducible_str(
+            zf,
             "META-INF/container.xml",
             """<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -410,7 +417,8 @@ def create_epub(images: list[str], output_path: str, title: str):
             ext = os.path.splitext(img)[1].lower()
             safe_filename = f"image_{i + 1}{ext}"
 
-            zf.write(img, f"OEBPS/images/{safe_filename}")
+            with open(img, "rb") as data:
+                write_reproducible_str(zf, f"OEBPS/images/{safe_filename}", data.read())
 
             page_id = f"page_{i + 1}"
             xhtml_id = f"xhtml_{i + 1}"
@@ -429,7 +437,7 @@ def create_epub(images: list[str], output_path: str, title: str):
 <head><title>Page {i + 1}</title></head>
 <body><img src="images/{safe_filename}" alt="Page {i + 1}" style="max-width:100%;"/></body>
 </html>"""
-            zf.writestr(f"OEBPS/page_{i + 1}.xhtml", html_content)
+            write_reproducible_str(zf, f"OEBPS/page_{i + 1}.xhtml", html_content)
 
             manifest.append(
                 f'<item id="{xhtml_id}" href="page_{i + 1}.xhtml" media-type="application/xhtml+xml"/>'
@@ -451,7 +459,7 @@ def create_epub(images: list[str], output_path: str, title: str):
     {"".join(spine)}
   </spine>
 </package>"""
-        zf.writestr("OEBPS/content.opf", content_opf)
+        write_reproducible_str(zf, "OEBPS/content.opf", content_opf)
 
         # Dynamically generate navigation points for all pages
         nav_points = []
@@ -462,7 +470,8 @@ def create_epub(images: list[str], output_path: str, title: str):
     </navPoint>""")
 
         # Provide a valid navMap with all pages included
-        zf.writestr(
+        write_reproducible_str(
+            zf,
             "OEBPS/toc.ncx",
             f"""<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
