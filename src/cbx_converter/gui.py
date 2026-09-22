@@ -79,8 +79,11 @@ class MainWindow(QtWidgets.QWidget):
         self.lbl_input_path = QtWidgets.QLabel("No input selected")
 
         # Options matching cli.py arguments
-        self.le_output = QtWidgets.QLineEdit("%F.pdf")
-        self.le_output.setPlaceholderText("%F.pdf")
+        default_output = os.path.join(
+            os.path.expanduser("~/Documents"), "cbx-converter", "%f.%e.pdf"
+        )
+        self.le_output = QtWidgets.QLineEdit(default_output)
+        self.le_output.setPlaceholderText(default_output)
         self.le_output.setToolTip("""The output file pattern. Extension must be provided.
 
 Output extension can be `cbz`, `cbt`, `cb7`, `pdf`, or `epub`.
