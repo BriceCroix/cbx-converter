@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QWidget):
 
         # Options matching cli.py arguments
         default_output = os.path.join(
-            os.path.expanduser("~/Documents"), "cbx-converter", "%f.%e.pdf"
+            os.path.expanduser("~"), "Documents", "cbx-converter", "%f.%e.pdf"
         )
         self.le_output = QtWidgets.QLineEdit(default_output)
         self.le_output.setPlaceholderText(default_output)
